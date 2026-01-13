@@ -24,7 +24,7 @@ export interface ScrapedData {
 }
 
 // Scrape multiple pages from a website
-export async function scrapeWebsite(url: string, maxPages: number = 10): Promise<ScrapedData> {
+export async function scrapeWebsite(url: string, maxPages: number = 20): Promise<ScrapedData> {
   try {
     let fullUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -41,6 +41,44 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
     let allHeadings: string[] = [];
     let allSubheadings: string[] = [];
     
+    // Try to find sitemap and add those URLs
+    try {
+      const sitemapUrls = [
+        `${baseUrl.protocol}//${baseUrl.hostname}/sitemap.xml`,
+        `${baseUrl.protocol}//${baseUrl.hostname}/sitemap_index.xml`,
+        `${baseUrl.protocol}//${baseUrl.hostname}/sitemap.txt`,
+      ];
+      
+      for (const sitemapUrl of sitemapUrls) {
+        try {
+          const sitemapResponse = await fetch(sitemapUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+          });
+          if (sitemapResponse.ok) {
+            const sitemapText = await sitemapResponse.text();
+            // Extract URLs from sitemap (simple regex for <loc> tags)
+            const urlMatches = sitemapText.match(/<loc>(.*?)<\/loc>/gi);
+            if (urlMatches) {
+              urlMatches.forEach(match => {
+                const url = match.replace(/<\/?loc>/gi, '').trim();
+                if (url && url.startsWith('http') && new URL(url).hostname === baseUrl.hostname) {
+                  if (!pagesToVisit.includes(url) && !visitedUrls.has(url)) {
+                    pagesToVisit.push(url);
+                  }
+                }
+              });
+              console.log(`Found ${urlMatches.length} URLs in sitemap`);
+              break; // Use first working sitemap
+            }
+          }
+        } catch (e) {
+          // Sitemap not found or invalid, continue
+        }
+      }
+    } catch (e) {
+      // Ignore sitemap errors
+    }
+    
     let mainData: Partial<ScrapedData> = {
       companyName: null,
       description: null,
@@ -52,11 +90,14 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
     };
 
     // Crawl pages
+    console.log(`Starting to scrape website: ${fullUrl}, max pages: ${maxPages}`);
     while (pagesToVisit.length > 0 && visitedUrls.size < maxPages) {
       const currentUrl = pagesToVisit.shift()!;
       
       if (visitedUrls.has(currentUrl)) continue;
       visitedUrls.add(currentUrl);
+      
+      console.log(`Scraping page ${visitedUrls.size}/${maxPages}: ${currentUrl}`);
 
       try {
         const response = await fetch(currentUrl, {
@@ -79,7 +120,7 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
         const pageText = $('body').text().replace(/\s+/g, ' ').trim();
         allContent += ' ' + pageText;
 
-        // Extract data from first page (homepage)
+        // Extract data from first page (homepage) - prioritize homepage
         if (visitedUrls.size === 1) {
           mainData.companyName = extractCompanyName($);
           mainData.description = extractDescription($);
@@ -88,6 +129,26 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
           mainData.address = extractAddress($);
           mainData.openingHours = extractOpeningHours($);
           mainData.socialMedia = extractSocialMedia($);
+        } else {
+          // Also try to extract contact info from other pages (in case it's not on homepage)
+          if (!mainData.phone) mainData.phone = extractPhone($, html) || mainData.phone;
+          if (!mainData.email) mainData.email = extractEmail($, html) || mainData.email;
+          if (!mainData.address) mainData.address = extractAddress($) || mainData.address;
+          if (!mainData.openingHours) mainData.openingHours = extractOpeningHours($) || mainData.openingHours;
+          
+          // Merge social media (take first non-null value)
+          const pageSocial = extractSocialMedia($);
+          if (!mainData.socialMedia.facebook && pageSocial.facebook) mainData.socialMedia.facebook = pageSocial.facebook;
+          if (!mainData.socialMedia.instagram && pageSocial.instagram) mainData.socialMedia.instagram = pageSocial.instagram;
+          if (!mainData.socialMedia.linkedin && pageSocial.linkedin) mainData.socialMedia.linkedin = pageSocial.linkedin;
+          
+          // If description is short, try to get better one from other pages
+          if (!mainData.description || mainData.description.length < 100) {
+            const pageDesc = extractDescription($);
+            if (pageDesc && pageDesc.length > mainData.description?.length || 0) {
+              mainData.description = pageDesc;
+            }
+          }
         }
 
         // Extract services from all pages
@@ -109,21 +170,48 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
         const pageSubheadings = extractSubheadings($);
         allSubheadings.push(...pageSubheadings);
 
-        // Find internal links to crawl
+        // Find internal links to crawl - be more aggressive
         $('a[href]').each((_, el) => {
           const href = $(el).attr('href');
           if (href) {
             try {
-              const linkUrl = new URL(href, currentUrl);
+              // Normalize href (handle relative URLs)
+              let normalizedHref = href;
+              if (href.startsWith('/')) {
+                normalizedHref = `${baseUrl.protocol}//${baseUrl.hostname}${href}`;
+              } else if (!href.startsWith('http')) {
+                normalizedHref = new URL(href, currentUrl).href;
+              }
+              
+              const linkUrl = new URL(normalizedHref);
+              
               // Only follow links on the same domain
               if (linkUrl.hostname === baseUrl.hostname && 
                   !visitedUrls.has(linkUrl.href) &&
+                  !pagesToVisit.includes(linkUrl.href) &&
                   !linkUrl.href.includes('#') &&
-                  !linkUrl.href.match(/\.(pdf|jpg|jpeg|png|gif|doc|docx|xls|xlsx)$/i)) {
+                  !linkUrl.href.match(/\.(pdf|jpg|jpeg|png|gif|svg|webp|doc|docx|xls|xlsx|zip|rar)$/i) &&
+                  !linkUrl.href.match(/(mailto|tel|javascript):/i) &&
+                  !linkUrl.href.includes('/wp-admin/') &&
+                  !linkUrl.href.includes('/wp-content/') &&
+                  !linkUrl.href.includes('/wp-includes/')) {
                 pagesToVisit.push(linkUrl.href);
               }
-            } catch {}
+            } catch (e) {
+              // Silently ignore invalid URLs
+            }
           }
+        });
+        
+        // Also look for common page patterns (om-oss, tjenester, kontakt, etc.)
+        const commonPages = ['om-oss', 'tjenester', 'kontakt', 'about', 'services', 'contact', 'produkter', 'products'];
+        commonPages.forEach(page => {
+          try {
+            const pageUrl = `${baseUrl.protocol}//${baseUrl.hostname}/${page}`;
+            if (!visitedUrls.has(pageUrl) && !pagesToVisit.includes(pageUrl)) {
+              pagesToVisit.push(pageUrl);
+            }
+          } catch {}
         });
 
       } catch (error) {
@@ -131,6 +219,9 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
       }
     }
 
+    console.log(`Finished scraping. Total pages scraped: ${visitedUrls.size}`);
+    console.log(`Found ${allServices.length} services, ${allImages.length} images, ${allHeadings.length} headings`);
+    
     // Deduplicate
     const uniqueServices = [...new Set(allServices)].slice(0, 20);
     const uniqueImages = [...new Set(allImages)].slice(0, 15);
