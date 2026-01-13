@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { CopyButton } from '@/components/copy-button';
+import { AdLayoutPreview } from '@/components/ad-layout-preview';
 import { 
   HEADINGS, 
   SUBHEADINGS, 
@@ -34,6 +35,7 @@ import {
   Check,
   X,
   ExternalLink,
+  Eye,
 } from 'lucide-react';
 
 interface ContentGeneratorProps {
@@ -936,8 +938,45 @@ export function ContentGenerator({
         </TabsContent>
 
         {/* Eksport Tab */}
-        <TabsContent value="eksport" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <TabsContent value="eksport" className="space-y-6">
+          {/* Visual Layout Previews */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Visuell layout-forslag
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Disse viser hvordan annonsene skal se ut visuelt. Layouten endres automatisk når du genererer nytt innhold.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <AdLayoutPreview 
+                content={content} 
+                companyName={companyName} 
+                formatType="ordered" 
+              />
+              {content.upgradeFormat && (
+                <AdLayoutPreview 
+                  content={content} 
+                  companyName={companyName} 
+                  formatType="upgrade1" 
+                />
+              )}
+              {content.secondUpgradeFormat && (
+                <AdLayoutPreview 
+                  content={content} 
+                  companyName={companyName} 
+                  formatType="upgrade2" 
+                />
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Text Export */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Tekst for kopiering</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Ordered Version */}
             <Card className="border-muted">
               <CardHeader>

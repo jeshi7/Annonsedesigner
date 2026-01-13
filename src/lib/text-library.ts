@@ -748,13 +748,13 @@ export const FORMAT_CONTENT_RULES: Record<string, {
     },
   },
   tredjedel: {
-    // Bestilt: Minimalt (4 elementer)
+    // Bestilt: Moderat (5-6 elementer) - tredjedel er større enn banner, så bør ha mer innhold
     ordered: {
       logo: true,
       heading: true,
-      subheading: false,
+      subheading: true, // Legg til subheading for tredjedel
       description: false,
-      serviceList: 0,
+      serviceList: 3, // Legg til 3 tjenester for tredjedel
       contactPhone: true,
       contactAddress: false,
       contactEmail: false,
