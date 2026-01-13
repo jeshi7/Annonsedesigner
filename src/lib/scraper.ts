@@ -138,9 +138,24 @@ export async function scrapeWebsite(url: string, maxPages: number = 20): Promise
           
           // Merge social media (take first non-null value)
           const pageSocial = extractSocialMedia($);
-          if (!mainData.socialMedia.facebook && pageSocial.facebook) mainData.socialMedia.facebook = pageSocial.facebook;
-          if (!mainData.socialMedia.instagram && pageSocial.instagram) mainData.socialMedia.instagram = pageSocial.instagram;
-          if (!mainData.socialMedia.linkedin && pageSocial.linkedin) mainData.socialMedia.linkedin = pageSocial.linkedin;
+          if (mainData.socialMedia) {
+            if (!mainData.socialMedia.facebook && pageSocial.facebook) {
+              mainData.socialMedia.facebook = pageSocial.facebook;
+            }
+            if (!mainData.socialMedia.instagram && pageSocial.instagram) {
+              mainData.socialMedia.instagram = pageSocial.instagram;
+            }
+            if (!mainData.socialMedia.linkedin && pageSocial.linkedin) {
+              mainData.socialMedia.linkedin = pageSocial.linkedin;
+            }
+          } else {
+            // Initialize if not already set
+            mainData.socialMedia = {
+              facebook: pageSocial.facebook || null,
+              instagram: pageSocial.instagram || null,
+              linkedin: pageSocial.linkedin || null,
+            };
+          }
           
           // If description is short, try to get better one from other pages
           if (!mainData.description || mainData.description.length < 100) {
