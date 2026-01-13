@@ -939,40 +939,39 @@ export function ContentGenerator({
               <Textarea
                 value={content.emailDraftOrdered}
                 onChange={(e) => onContentChange({ emailDraftOrdered: e.target.value })}
-                rows={16}
+                rows={12}
                 className="bg-background/50 font-mono text-sm"
               />
             </CardContent>
           </Card>
 
           {/* Email for Upgrade 1 */}
-          {content.upgradeFormat && (
-            <Card className="border-primary/50">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-primary">
-                      <Mail className="h-5 w-5" />
-                      E-post for Upgrade 1 ({content.upgradeFormat?.name})
-                    </CardTitle>
-                    <CardDescription>
-                      +kr {content.priceDifference.toLocaleString('nb-NO')} fra bestilt
-                    </CardDescription>
-                  </div>
-                  <CopyButton text={content.emailDraft} label="Kopier e-post" />
+          <Card className="border-primary/50">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-primary">
+                    <Mail className="h-5 w-5" />
+                    E-post for Upgrade 1 ({content.upgradeFormat?.name})
+                  </CardTitle>
+                  <CardDescription>
+                    +kr {content.priceDifference.toLocaleString('nb-NO')} fra bestilt
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={content.emailDraft}
-                  onChange={(e) => onContentChange({ emailDraft: e.target.value })}
-                  rows={16}
-                  className="bg-background/50 font-mono text-sm"
-                />
-              </CardContent>
-            </Card>
-          )}
+                <CopyButton text={content.emailDraft} label="Kopier e-post" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={content.emailDraft}
+                onChange={(e) => onContentChange({ emailDraft: e.target.value })}
+                rows={16}
+                className="bg-background/50 font-mono text-sm"
+              />
+            </CardContent>
+          </Card>
 
+          {/* Email for Upgrade 2 */}
           {content.secondUpgradeFormat && content.emailDraftSecondUpgrade && (
             <Card className="border-amber-500/50">
               <CardHeader>
@@ -1013,47 +1012,42 @@ export function ContentGenerator({
                 Disse viser hvordan annonsene skal se ut visuelt. Layouten endres automatisk når du genererer nytt innhold.
               </p>
             </div>
-            
-            {/* Always show previews - even if data is missing, show placeholders */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AdLayoutPreview 
-                content={content} 
-                companyName={companyName} 
-                formatType="ordered" 
-              />
-              {content.upgradeFormat ? (
+            {content.orderedFormatKey ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <AdLayoutPreview 
                   content={content} 
                   companyName={companyName} 
-                  formatType="upgrade1" 
+                  formatType="ordered" 
                 />
-              ) : (
-                <Card className="border-2 border-dashed border-muted">
+                {content.upgradeFormat && (
+                  <AdLayoutPreview 
+                    content={content} 
+                    companyName={companyName} 
+                    formatType="upgrade1" 
+                  />
+                )}
+                {content.secondUpgradeFormat && (
+                  <AdLayoutPreview 
+                    content={content} 
+                    companyName={companyName} 
+                    formatType="upgrade2" 
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Card className="border-2 border-dashed">
                   <CardHeader>
-                    <CardTitle className="text-sm">Upgrade 1</CardTitle>
+                    <CardTitle className="text-sm">Layout-forslag vil vises her</CardTitle>
                   </CardHeader>
-                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
-                    Ikke tilgjengelig
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-medium mb-2">Generer innhold først for å se layout-forslag</p>
+                    <p className="text-xs">Gå til "Innhold"-fanen og klikk "Generer innhold"</p>
                   </CardContent>
                 </Card>
-              )}
-              {content.secondUpgradeFormat ? (
-                <AdLayoutPreview 
-                  content={content} 
-                  companyName={companyName} 
-                  formatType="upgrade2" 
-                />
-              ) : (
-                <Card className="border-2 border-dashed border-muted">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Upgrade 2</CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
-                    Ikke tilgjengelig
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 
