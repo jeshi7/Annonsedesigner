@@ -11,6 +11,7 @@ import {
   calculatePriceDifference,
   getFormatDetails,
   EMAIL_TEMPLATE,
+  EMAIL_TEMPLATE_ORDERED,
   IndustryKey,
   FORMAT_CONTENT_RULES,
 } from './text-library';
@@ -38,8 +39,9 @@ export interface GeneratedContent {
   images: string[];
   certifications: string[];
   scrapedData: ScrapedData;
-  emailDraft: string;
-  emailDraftSecondUpgrade: string;
+  emailDraftOrdered: string; // E-post for bestilt versjon
+  emailDraft: string; // E-post for upgrade 1
+  emailDraftSecondUpgrade: string; // E-post for upgrade 2
   orderedFormatKey: string; // Format key (visittkort, banner, etc.)
   orderedFormat: {
     name: string;
@@ -210,6 +212,14 @@ export async function generateContent(
     console.log('Using personal comment from library');
   }
   
+  // Generate email draft for ordered version
+  const emailDraftOrdered = generateEmailDraftOrdered(
+    contactName || 'der',
+    orderedDetails?.label || orderedFormat,
+    orderedDetails?.dimensions || '',
+    personalComment
+  );
+
   // Generate email drafts for both upgrade levels
   const emailDraft = generateEmailDraft({
     contactName: contactName || 'der',
@@ -277,6 +287,7 @@ export async function generateContent(
     images: scrapedData.images,
     certifications: scrapedData.certifications,
     scrapedData,
+    emailDraftOrdered,
     emailDraft,
     emailDraftSecondUpgrade,
     orderedFormatKey: orderedFormat,
@@ -311,6 +322,25 @@ interface EmailDraftParams {
   upgradeDimensions: string;
   priceDifference: number;
   personalComment: string;
+}
+
+function generateEmailDraftOrdered(
+  contactName: string,
+  orderedFormat: string,
+  orderedDimensions: string,
+  personalComment: string
+): string {
+  let email = EMAIL_TEMPLATE_ORDERED
+    .replace('{KUNDENAVN}', contactName)
+    .replace('{PERSONLIG_KOMMENTAR}', personalComment)
+    .replace('{BESTILT_FORMAT}', orderedFormat.toLowerCase())
+    .replace('{BESTILT_DIMENSJONER}', orderedDimensions);
+  
+  // Add interactive text if applicable (for formats larger than tredjedel)
+  const interaktivTekst = 'På den interaktive annonsen har jeg satt opp noen klikkbare knapper til dine sosiale medier sider.\nHer er link til den interaktive annonsen: [LINK]';
+  email = email.replace('{INTERAKTIV_TEKST}', interaktivTekst);
+  
+  return email;
 }
 
 function generateEmailDraft(params: EmailDraftParams): string {

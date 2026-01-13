@@ -978,6 +978,20 @@ Begge annonsene er vedlagt så det er bare å komme tilbake til meg om hvilken a
 
 Ønsker deg en god dag 😊`;
 
+export const EMAIL_TEMPLATE_ORDERED = `Hei, {KUNDENAVN} 😊
+
+Jeg er designeren på dette prosjektet, og har vært heldig å få designe annonsen du har bestilt.
+
+{PERSONLIG_KOMMENTAR}
+
+Jeg har laget en {BESTILT_FORMAT} ({BESTILT_DIMENSJONER}) annonse for deg basert på informasjonen fra nettsiden din. Annonsen er klar og vedlagt.
+
+{INTERAKTIV_TEKST}
+
+Hvis du har noen endringer eller ønsker justeringer, er det bare å komme tilbake til meg :)
+
+Ønsker deg en god dag 😊`;
+
 export const PERSONAL_COMMENTS: Partial<Record<IndustryKey, string[]>> = {
   bygg_anlegg: [
     'Imponerende prosjekter dere har gjennomført! Det var gøy å få frem bredden i tjenestene deres.',

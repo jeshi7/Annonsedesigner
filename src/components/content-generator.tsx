@@ -919,8 +919,35 @@ export function ContentGenerator({
 
         {/* E-post Tab */}
         <TabsContent value="epost" className="space-y-4">
+          {/* Email for Ordered Version */}
+          <Card className="border-muted">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    E-post for bestilt versjon ({content.orderedFormat.name})
+                  </CardTitle>
+                  <CardDescription>
+                    Til bruk hvis kunden ikke vil ha upgrade
+                  </CardDescription>
+                </div>
+                <CopyButton text={content.emailDraftOrdered} label="Kopier e-post" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={content.emailDraftOrdered}
+                onChange={(e) => onContentChange({ emailDraftOrdered: e.target.value })}
+                rows={16}
+                className="bg-background/50 font-mono text-sm"
+              />
+            </CardContent>
+          </Card>
+
           {/* Email for Upgrade 1 */}
-          <Card className="border-primary/50">
+          {content.upgradeFormat && (
+            <Card className="border-primary/50">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
