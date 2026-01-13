@@ -48,20 +48,39 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
     ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade1
     : FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade2;
 
-  // If we don't have the required data, show a placeholder with debug info
+  // If we don't have the required data, show a simple visual preview anyway
   if (!formatKey || !formatDetails || !rules) {
+    // Use fallback values for preview
+    const fallbackFormat = formatType === 'ordered' 
+      ? { name: 'Bestilt versjon', dimensions: 'N/A' }
+      : formatType === 'upgrade1'
+      ? { name: 'Upgrade 1', dimensions: 'N/A' }
+      : { name: 'Upgrade 2', dimensions: 'N/A' };
+    
     return (
-      <Card className="border-2 border-dashed border-orange-500">
+      <Card className="border-2 border-dashed">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            Layout-forslag: {formatType === 'ordered' ? 'Bestilt' : formatType === 'upgrade1' ? 'Upgrade 1' : 'Upgrade 2'}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Layout-forslag: {fallbackFormat.name}
+            </CardTitle>
+            <Badge variant="outline" className="text-xs">
+              {fallbackFormat.dimensions}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground text-center py-8 space-y-2">
-            <p>Vent på at innholdet genereres...</p>
-            <p className="text-xs">Debug: formatKey={formatKey ? 'OK' : 'MISSING'}, formatDetails={formatDetails ? 'OK' : 'MISSING'}, rules={rules ? 'OK' : 'MISSING'}</p>
+          {/* Simple visual preview even without data */}
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-4 mb-4 min-h-[200px] w-full flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <Eye className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Venter på innhold...</p>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground space-y-1 bg-slate-50 dark:bg-slate-900/50 p-3 rounded">
+            <p className="font-semibold">Layout-tips:</p>
+            <p>Generer innhold først for å se layout-forslag</p>
           </div>
         </CardContent>
       </Card>

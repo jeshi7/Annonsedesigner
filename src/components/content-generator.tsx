@@ -1013,42 +1013,47 @@ export function ContentGenerator({
                 Disse viser hvordan annonsene skal se ut visuelt. Layouten endres automatisk når du genererer nytt innhold.
               </p>
             </div>
-            {content.orderedFormatKey ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Always show previews - even if data is missing, show placeholders */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <AdLayoutPreview 
+                content={content} 
+                companyName={companyName} 
+                formatType="ordered" 
+              />
+              {content.upgradeFormat ? (
                 <AdLayoutPreview 
                   content={content} 
                   companyName={companyName} 
-                  formatType="ordered" 
+                  formatType="upgrade1" 
                 />
-                {content.upgradeFormat && (
-                  <AdLayoutPreview 
-                    content={content} 
-                    companyName={companyName} 
-                    formatType="upgrade1" 
-                  />
-                )}
-                {content.secondUpgradeFormat && (
-                  <AdLayoutPreview 
-                    content={content} 
-                    companyName={companyName} 
-                    formatType="upgrade2" 
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <Card className="border-2 border-dashed">
+              ) : (
+                <Card className="border-2 border-dashed border-muted">
                   <CardHeader>
-                    <CardTitle className="text-sm">Layout-forslag vil vises her</CardTitle>
+                    <CardTitle className="text-sm">Upgrade 1</CardTitle>
                   </CardHeader>
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="font-medium mb-2">Generer innhold først for å se layout-forslag</p>
-                    <p className="text-xs">Gå til "Innhold"-fanen og klikk "Generer innhold"</p>
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    Ikke tilgjengelig
                   </CardContent>
                 </Card>
-              </div>
-            )}
+              )}
+              {content.secondUpgradeFormat ? (
+                <AdLayoutPreview 
+                  content={content} 
+                  companyName={companyName} 
+                  formatType="upgrade2" 
+                />
+              ) : (
+                <Card className="border-2 border-dashed border-muted">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Upgrade 2</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    Ikke tilgjengelig
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </TabsContent>
 
