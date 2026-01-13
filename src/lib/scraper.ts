@@ -160,7 +160,8 @@ export async function scrapeWebsite(url: string, maxPages: number = 20): Promise
           // If description is short, try to get better one from other pages
           if (!mainData.description || mainData.description.length < 100) {
             const pageDesc = extractDescription($);
-            if (pageDesc && pageDesc.length > mainData.description?.length || 0) {
+            const currentDescLength = mainData.description?.length || 0;
+            if (pageDesc && pageDesc.length > currentDescLength) {
               mainData.description = pageDesc;
             }
           }
