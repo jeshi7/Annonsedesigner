@@ -76,6 +76,102 @@ export function ContentGenerator({
     onContentChange({ services: updated });
   };
 
+  // Funksjon for å foreslå ikoner (som tekst) basert på tjenester og innhold
+  const getSuggestedIcons = (): string[] => {
+    const iconMap: Record<string, string[]> = {
+      // Bygg og anlegg
+      'bygg': ['bygg', 'hammer', 'hus', 'verktøy'],
+      'anlegg': ['anlegg', 'bygg', 'maskin', 'verktøy'],
+      'renovering': ['renovering', 'verktøy', 'oppussing', 'hus'],
+      'riving': ['riving', 'bygg', 'anlegg'],
+      
+      // Isolasjon og materialer
+      'isolasjon': ['isolasjon', 'energi', 'materiale', 'hus'],
+      'isolering': ['isolasjon', 'energi', 'materiale', 'hus'],
+      'energi': ['energi', 'miljø', 'bærekraft', 'effektivitet'],
+      'energirenovering': ['energi', 'renovering', 'hus', 'miljø'],
+      
+      // Rørlegger og elektro
+      'rørlegger': ['rørlegger', 'vann', 'bad', 'rør'],
+      'elektro': ['elektro', 'strøm', 'lys', 'elektrisk'],
+      'elektriker': ['elektro', 'strøm', 'lys', 'elektrisk'],
+      
+      'maling': ['maling', 'pensel', 'farge', 'dekorasjon'],
+      'maler': ['maling', 'pensel', 'farge', 'dekorasjon'],
+      'gulv': ['gulv', 'parkett', 'flis', 'belegg'],
+      
+      // Tak og blikkenslager
+      'tak': ['tak', 'regn', 'blikkenslager', 'tekking'],
+      'blikkenslager': ['blikkenslager', 'tak', 'rør', 'metall'],
+      
+      // Transport og logistikk
+      'transport': ['transport', 'bil', 'lastebil', 'logistikk'],
+      'logistikk': ['logistikk', 'transport', 'lastebil', 'lager'],
+      'maskin': ['maskin', 'utstyr', 'verktøy', 'maskineri'],
+      
+      // Helse og velvære
+      'helse': ['helse', 'medisin', 'sykepleie', 'velvære'],
+      'velvære': ['velvære', 'massasje', 'behandling', 'helse'],
+      'fysioterapi': ['fysioterapi', 'trening', 'rehabilitering', 'helse'],
+      
+      // Teknologi
+      'teknologi': ['teknologi', 'data', 'nettverk', 'IT'],
+      'it': ['IT', 'data', 'nettverk', 'teknologi'],
+      'nettverk': ['nettverk', 'data', 'IT', 'kommunikasjon'],
+      
+      // Restaurant og mat
+      'restaurant': ['restaurant', 'mat', 'kokk', 'servering'],
+      'mat': ['mat', 'restaurant', 'kokk', 'catering'],
+      'catering': ['catering', 'mat', 'servering', 'arrangement'],
+      
+      // Generelt
+      'rådgivning': ['rådgivning', 'konsultasjon', 'ekspertise', 'service'],
+      'service': ['service', 'vedlikehold', 'support', 'hjelp'],
+      'kvalitet': ['kvalitet', 'sertifisert', 'standard', 'ekspertise'],
+      'sertifisert': ['sertifisert', 'kvalitet', 'standard', 'godkjent'],
+    };
+
+    const suggestedIcons: string[] = [];
+    const usedIcons = new Set<string>();
+
+    // Sjekk tjenester
+    selectedServices.forEach(service => {
+      const lowerService = service.toLowerCase();
+      for (const [key, icons] of Object.entries(iconMap)) {
+        if (lowerService.includes(key) && icons.length > 0) {
+          const icon = icons[0];
+          if (!usedIcons.has(icon)) {
+            suggestedIcons.push(icon);
+            usedIcons.add(icon);
+          }
+        }
+      }
+    });
+
+    // Sjekk heading og subheading
+    const contentText = `${content.heading} ${content.subheading} ${content.description}`.toLowerCase();
+    for (const [key, icons] of Object.entries(iconMap)) {
+      if (contentText.includes(key) && icons.length > 0) {
+        const icon = icons[0];
+        if (!usedIcons.has(icon)) {
+          suggestedIcons.push(icon);
+          usedIcons.add(icon);
+        }
+      }
+    }
+
+    // Legg til standard ikoner hvis ikke nok
+    const standardIcons = ['kvalitet', 'service', 'ekspertise', 'sertifisert', 'profesjonell', 'pålitelig', 'erfaring', 'innovativ'];
+    standardIcons.forEach(icon => {
+      if (suggestedIcons.length < 10 && !usedIcons.has(icon)) {
+        suggestedIcons.push(icon);
+        usedIcons.add(icon);
+      }
+    });
+
+    return suggestedIcons.slice(0, 12); // Returner opp til 12 ikoner
+  };
+
   const allServices = SERVICE_LISTS[industry] || [
     'Rådgivning',
     'Prosjektering',
@@ -648,6 +744,51 @@ export function ContentGenerator({
               </CardContent>
             </Card>
           )}
+
+          {/* Icon Suggestions */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Forslag til ikoner (tekst)
+                </CardTitle>
+                <CopyButton 
+                  text={getSuggestedIcons().join(', ')} 
+                  label="Kopier alle" 
+                  size="sm"
+                />
+              </div>
+              <CardDescription className="text-xs mt-1">
+                Ikonnavn basert på tjenester og innhold. Klikk for å kopiere.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {getSuggestedIcons().map((icon, i) => (
+                  <Badge
+                    key={i}
+                    variant="outline"
+                    className="cursor-pointer hover:bg-primary/20 hover:border-primary transition-colors"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(icon);
+                      } catch (err) {
+                        console.error('Failed to copy:', err);
+                      }
+                    }}
+                    title={`Klikk for å kopiere: ${icon}`}
+                  >
+                    {icon}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                💡 Tips: Bruk disse ikonnavnene i InDesign for å legge til relevante ikoner i annonsene. 
+                Ikoner kan brukes ved tjenester, kontaktinfo eller som dekorative elementer.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Bilder Tab */}
