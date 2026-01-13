@@ -948,29 +948,30 @@ export function ContentGenerator({
           {/* Email for Upgrade 1 */}
           {content.upgradeFormat && (
             <Card className="border-primary/50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-primary">
-                    <Mail className="h-5 w-5" />
-                    E-post for Upgrade 1 ({content.upgradeFormat?.name})
-                  </CardTitle>
-                  <CardDescription>
-                    +kr {content.priceDifference.toLocaleString('nb-NO')} fra bestilt
-                  </CardDescription>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-primary">
+                      <Mail className="h-5 w-5" />
+                      E-post for Upgrade 1 ({content.upgradeFormat?.name})
+                    </CardTitle>
+                    <CardDescription>
+                      +kr {content.priceDifference.toLocaleString('nb-NO')} fra bestilt
+                    </CardDescription>
+                  </div>
+                  <CopyButton text={content.emailDraft} label="Kopier e-post" />
                 </div>
-                <CopyButton text={content.emailDraft} label="Kopier e-post" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={content.emailDraft}
-                onChange={(e) => onContentChange({ emailDraft: e.target.value })}
-                rows={16}
-                className="bg-background/50 font-mono text-sm"
-              />
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={content.emailDraft}
+                  onChange={(e) => onContentChange({ emailDraft: e.target.value })}
+                  rows={16}
+                  className="bg-background/50 font-mono text-sm"
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Email for Upgrade 2 */}
           {content.secondUpgradeFormat && content.emailDraftSecondUpgrade && (
