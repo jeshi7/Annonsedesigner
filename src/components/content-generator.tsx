@@ -90,6 +90,12 @@ export function ContentGenerator({
   const upgrade1Rules = content.upgradeFormatKey ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade1 : null;
   const upgrade2Rules = content.secondUpgradeFormatKey ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade2 : null;
 
+  // Check if format is larger than tredjedel (halvside, helside, spread)
+  const isLargerThanTredjedel = (formatKey: string | null): boolean => {
+    if (!formatKey) return false;
+    return ['halvside', 'helside', 'spread'].includes(formatKey);
+  };
+
   // Format content for copy - Bestilt versjon (minimalt)
   const formatOrderedVersion = () => {
     const lines = [`[LOGO]`, ``];
@@ -152,6 +158,19 @@ export function ContentGenerator({
       content.certifications.slice(0, certCount).forEach(c => lines.push(`[${c}]`));
     }
     
+    // Sosiale medier-knapper for formater over tredjedel
+    if (isLargerThanTredjedel(content.upgradeFormatKey)) {
+      const socialLinks: string[] = [];
+      if (content.scrapedData.socialMedia.facebook) socialLinks.push(`Facebook: ${content.scrapedData.socialMedia.facebook}`);
+      if (content.scrapedData.socialMedia.instagram) socialLinks.push(`Instagram: ${content.scrapedData.socialMedia.instagram}`);
+      if (content.scrapedData.socialMedia.linkedin) socialLinks.push(`LinkedIn: ${content.scrapedData.socialMedia.linkedin}`);
+      
+      if (socialLinks.length > 0) {
+        lines.push(``, `SOSIALE MEDIER:`);
+        socialLinks.forEach(link => lines.push(link));
+      }
+    }
+    
     return lines.join('\n');
   };
 
@@ -206,6 +225,19 @@ export function ContentGenerator({
       content.images.slice(0, imageCount).forEach((img, i) => {
         lines.push(`[Bilde ${i + 1}]`);
       });
+    }
+    
+    // Sosiale medier-knapper for formater over tredjedel
+    if (isLargerThanTredjedel(content.secondUpgradeFormatKey)) {
+      const socialLinks: string[] = [];
+      if (content.scrapedData.socialMedia.facebook) socialLinks.push(`Facebook: ${content.scrapedData.socialMedia.facebook}`);
+      if (content.scrapedData.socialMedia.instagram) socialLinks.push(`Instagram: ${content.scrapedData.socialMedia.instagram}`);
+      if (content.scrapedData.socialMedia.linkedin) socialLinks.push(`LinkedIn: ${content.scrapedData.socialMedia.linkedin}`);
+      
+      if (socialLinks.length > 0) {
+        lines.push(``, `SOSIALE MEDIER:`);
+        socialLinks.forEach(link => lines.push(link));
+      }
     }
     
     return lines.join('\n');

@@ -360,50 +360,101 @@ function extractCertifications($: cheerio.CheerioAPI): string[] {
 
 function extractHeadings($: cheerio.CheerioAPI): string[] {
   const headings: string[] = [];
+  const excludeWords = ['menu', 'kontakt', 'cookie', 'privacy', 'terms', 'vilkaar', 'personvern', 'logg inn', 'login', 'registrer'];
   
-  // Hent fra h1, h2, h3 - prioriter h1 og h2
-  $('h1, h2').each((_, el) => {
+  // Hent fra alle overskrifter (h1-h6)
+  $('h1, h2, h3, h4, h5, h6').each((_, el) => {
     const text = $(el).text().trim();
-    // Filtrer ut navigasjon, footer, etc.
+    const lowerText = text.toLowerCase();
     if (text && 
         text.length > 5 && 
         text.length < 80 &&
-        !text.toLowerCase().includes('menu') &&
-        !text.toLowerCase().includes('kontakt') &&
-        !text.toLowerCase().includes('cookie') &&
-        !text.toLowerCase().includes('privacy')) {
+        !excludeWords.some(word => lowerText.includes(word))) {
       headings.push(text);
     }
   });
   
-  // Hent også fra hero/heroine sections
-  $('.hero h1, .hero h2, .heroine h1, .heroine h2, .banner h1, .banner h2').each((_, el) => {
-    const text = $(el).text().trim();
+  // Hent fra hero/CTA/seksjoner med viktig innhold
+  $('.hero, .heroine, .banner, .cta, .call-to-action, .intro, .lead, [class*="hero"], [class*="banner"]').each((_, el) => {
+    const $el = $(el);
+    // Hent første setning eller kort tekst
+    const text = $el.find('h1, h2, h3, .title, .headline').first().text().trim() || 
+                 $el.text().split(/[.!?]/)[0].trim();
     if (text && text.length > 5 && text.length < 80) {
       headings.push(text);
     }
   });
+  
+  // Hent fra sterke, fengende setninger i paragraf (korte, kraftige setninger)
+  $('main p, article p, .content p, .text p').each((_, el) => {
+    const text = $(el).text().trim();
+    const sentences = text.split(/[.!?]/).map(s => s.trim()).filter(s => s.length > 8 && s.length < 60);
+    // Velg setninger som ser ut som headings (korte, kraftige)
+    sentences.forEach(sentence => {
+      if (!excludeWords.some(word => sentence.toLowerCase().includes(word))) {
+        headings.push(sentence);
+      }
+    });
+  });
+  
+  // Hent fra meta tags
+  const ogTitle = $('meta[property="og:title"]').attr('content');
+  if (ogTitle && ogTitle.length > 5 && ogTitle.length < 80) {
+    headings.push(ogTitle);
+  }
   
   return headings;
 }
 
 function extractSubheadings($: cheerio.CheerioAPI): string[] {
   const subheadings: string[] = [];
+  const excludeWords = ['menu', 'kontakt', 'cookie', 'privacy', 'terms', 'vilkaar', 'personvern', 'logg inn', 'login'];
   
-  // Hent fra h3, h4, og første setning i paragraf
-  $('h3, h4').each((_, el) => {
+  // Hent fra alle overskrifter som kan fungere som subheadings
+  $('h2, h3, h4, h5, h6').each((_, el) => {
     const text = $(el).text().trim();
-    if (text && text.length > 10 && text.length < 150) {
+    const lowerText = text.toLowerCase();
+    if (text && 
+        text.length > 10 && 
+        text.length < 150 &&
+        !excludeWords.some(word => lowerText.includes(word))) {
       subheadings.push(text);
     }
   });
   
-  // Hent første setning fra viktige paragraf
-  $('main p, .about-us p, .om-oss p, article p').slice(0, 5).each((_, el) => {
+  // Hent relevante setninger fra hele nettsiden
+  $('main p, article p, .content p, .text p, .about-us p, .om-oss p, .description p, .intro p').each((_, el) => {
     const text = $(el).text().trim();
-    const firstSentence = text.split(/[.!?]/)[0].trim();
-    if (firstSentence && firstSentence.length > 15 && firstSentence.length < 150) {
-      subheadings.push(firstSentence);
+    if (!text || text.length < 20) return;
+    
+    // Del opp i setninger og velg relevante
+    const sentences = text.split(/[.!?]/)
+      .map(s => s.trim())
+      .filter(s => {
+        const lower = s.toLowerCase();
+        return s.length > 15 && 
+               s.length < 150 &&
+               !excludeWords.some(word => lower.includes(word)) &&
+               !lower.includes('cookie') &&
+               !lower.includes('gdpr');
+      });
+    
+    // Ta første 2-3 setninger fra hver paragraf
+    subheadings.push(...sentences.slice(0, 2));
+  });
+  
+  // Hent fra meta description
+  const metaDesc = $('meta[name="description"]').attr('content') ||
+                   $('meta[property="og:description"]').attr('content');
+  if (metaDesc && metaDesc.length > 15 && metaDesc.length < 150) {
+    subheadings.push(metaDesc);
+  }
+  
+  // Hent fra list items som kan fungere som subheadings
+  $('main li, article li, .content li').each((_, el) => {
+    const text = $(el).text().trim();
+    if (text && text.length > 15 && text.length < 150) {
+      subheadings.push(text);
     }
   });
   
