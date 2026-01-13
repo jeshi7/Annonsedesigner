@@ -192,6 +192,12 @@ export function ContentGenerator({
     return ['halvside', 'helside', 'spread'].includes(formatKey);
   };
 
+  // Check if format is tredjedel or larger (tredjedel, halvside, helside, spread)
+  const isTredjedelOrLarger = (formatKey: string | null): boolean => {
+    if (!formatKey) return false;
+    return ['tredjedel', 'halvside', 'helside', 'spread'].includes(formatKey);
+  };
+
   // Format content for copy - Bestilt versjon (minimalt)
   const formatOrderedVersion = () => {
     const lines = [`[LOGO]`, ``];
@@ -250,12 +256,28 @@ export function ContentGenerator({
       lines.push(``);
     }
     
-    lines.push(`KONTAKT:`);
-    if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
-    if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
-    if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
-    if (rules.website) {
-      lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    // Kontaktinformasjon - alltid inkluder for tredjedel og oppover
+    const shouldIncludeContact = isTredjedelOrLarger(content.upgradeFormatKey);
+    
+    if (shouldIncludeContact || rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) {
+      lines.push(`KONTAKT:`);
+      // Hvis format er tredjedel eller større, inkluder all tilgjengelig kontaktinfo
+      if (shouldIncludeContact) {
+        if (content.phone) lines.push(`📞 ${content.phone}`);
+        if (content.address) lines.push(`📍 ${content.address}`);
+        if (content.email) lines.push(`✉️ ${content.email}`);
+        if (rules.website || shouldIncludeContact) {
+          lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+        }
+      } else {
+        // Ellers følg reglene
+        if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
+        if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
+        if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
+        if (rules.website) {
+          lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+        }
+      }
     }
     
     // Certifications
@@ -347,15 +369,34 @@ export function ContentGenerator({
       lines.push(``);
     }
     
-    lines.push(`KONTAKT:`);
-    if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
-    if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
-    if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
-    if (rules.openingHours && content.scrapedData.openingHours) {
-      lines.push(`🕐 Åpningstider: ${content.scrapedData.openingHours}`);
-    }
-    if (rules.website) {
-      lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    // Kontaktinformasjon - alltid inkluder for tredjedel og oppover
+    const shouldIncludeContact = isTredjedelOrLarger(content.secondUpgradeFormatKey);
+    
+    if (shouldIncludeContact || rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) {
+      lines.push(`KONTAKT:`);
+      // Hvis format er tredjedel eller større, inkluder all tilgjengelig kontaktinfo
+      if (shouldIncludeContact) {
+        if (content.phone) lines.push(`📞 ${content.phone}`);
+        if (content.address) lines.push(`📍 ${content.address}`);
+        if (content.email) lines.push(`✉️ ${content.email}`);
+        if (content.scrapedData.openingHours) {
+          lines.push(`🕐 Åpningstider: ${content.scrapedData.openingHours}`);
+        }
+        if (rules.website || shouldIncludeContact) {
+          lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+        }
+      } else {
+        // Ellers følg reglene
+        if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
+        if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
+        if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
+        if (rules.openingHours && content.scrapedData.openingHours) {
+          lines.push(`🕐 Åpningstider: ${content.scrapedData.openingHours}`);
+        }
+        if (rules.website) {
+          lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+        }
+      }
     }
     
     // Upgrade 2: Legg til ekstra informasjon hvis tilgjengelig
