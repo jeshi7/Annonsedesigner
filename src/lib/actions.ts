@@ -96,6 +96,8 @@ export async function generateContent(
       certifications: [],
       allPageContent: '',
       pagesScraped: 0,
+      potentialHeadings: [],
+      potentialSubheadings: [],
     };
   }
   
