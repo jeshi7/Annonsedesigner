@@ -91,6 +91,32 @@ export default function Home() {
     }
   };
 
+  const handleRegenerateContent = async () => {
+    if (!currentProject || !generatedContent) return;
+    
+    setIsLoading(true);
+    try {
+      const content = await generateContent(
+        currentProject.website,
+        currentProject.industry as IndustryKey,
+        currentProject.orderedFormat,
+        currentProject.contactName
+      );
+      
+      setGeneratedContent(content);
+      toast.success('Nytt innhold generert!', {
+        description: 'Nye headings, subheadings og services',
+      });
+    } catch (error) {
+      console.error('Error regenerating content:', error);
+      toast.error('Kunne ikke generere nytt innhold', {
+        description: 'Prøv igjen',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleReset = () => {
     setGeneratedContent(null);
     setCurrentProject(null);
@@ -206,10 +232,21 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             {/* Back Button and Project Info */}
             <div className="flex items-center justify-between mb-6">
-              <Button variant="ghost" onClick={handleReset} className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Nytt prosjekt
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" onClick={handleReset} className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Nytt prosjekt
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRegenerateContent} 
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {isLoading ? 'Genererer...' : 'Generer nytt innhold'}
+                </Button>
+              </div>
               <div className="text-right">
                 <p className="font-semibold">{currentProject?.companyName}</p>
                 <p className="text-sm text-muted-foreground">{currentProject?.projectId}</p>
