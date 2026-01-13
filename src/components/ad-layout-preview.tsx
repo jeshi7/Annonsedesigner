@@ -110,30 +110,30 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
 
   // Render different layout variants
   const renderLayout = () => {
-    const baseClasses = "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed border-slate-400 dark:border-slate-600 rounded-lg p-4 mb-4 min-h-[200px] w-full shadow-sm";
+    const baseClasses = "bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-lg p-6 min-h-[300px] w-full shadow-md";
     
     switch (layoutVariant) {
       case 'centered':
         return (
-          <div className={baseClasses} style={{ aspectRatio, minHeight: '200px' }}>
-            <div className="h-full flex flex-col items-center justify-center gap-3 text-xs text-center">
+          <div className={baseClasses} style={{ aspectRatio, minHeight: '300px' }}>
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-sm text-center">
               {rules.logo && (
-                <div className="w-20 h-10 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 text-[10px] font-medium mb-2">
+                <div className="w-24 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-semibold mb-2 border border-blue-300 dark:border-blue-700">
                   [LOGO]
                 </div>
               )}
               {rules.heading && (
-                <div className="font-bold text-lg leading-tight text-slate-900 dark:text-slate-100">
+                <div className="font-bold text-xl leading-tight text-gray-900 dark:text-gray-100">
                   {content.heading}
                 </div>
               )}
               {showSubheading && (
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-snug max-w-[80%]">
+                <div className="text-base text-gray-700 dark:text-gray-300 leading-snug max-w-[85%]">
                   {content.subheading}
                 </div>
               )}
               {showDescription && (
-                <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-[85%]">
+                <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-[90%]">
                   {formatType === 'upgrade2' && content.description.length > 120
                     ? content.description.substring(0, 120) + '...'
                     : formatType === 'upgrade1' && content.description.length > 60
@@ -142,9 +142,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {services.length > 0 && (
-                <div className="mt-2 space-y-1 w-full">
-                  <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">TJENESTER:</div>
-                  <ul className="list-none space-y-0.5 text-xs text-slate-700 dark:text-slate-300">
+                <div className="mt-3 space-y-1 w-full">
+                  <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">TJENESTER:</div>
+                  <ul className="list-none space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     {services.map((s, i) => (
                       <li key={i} className="leading-tight">• {s}</li>
                     ))}
@@ -152,9 +152,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {(rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) && (
-                <div className="mt-auto pt-2 border-t border-slate-300 dark:border-slate-600 w-full">
-                  <div className="font-semibold text-xs text-slate-800 dark:text-slate-200 mb-1">KONTAKT:</div>
-                  <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                <div className="mt-auto pt-3 border-t-2 border-gray-300 dark:border-gray-600 w-full">
+                  <div className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2">KONTAKT:</div>
+                  <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                     {rules.contactPhone && content.phone && <div>📞 {content.phone}</div>}
                     {rules.contactAddress && content.address && <div>📍 {content.address}</div>}
                     {rules.contactEmail && content.email && <div>✉️ {content.email}</div>}
@@ -163,9 +163,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {rules.certifications && rules.certifications > 0 && content.certifications.length > 0 && (
-                <div className="mt-2 flex gap-1 flex-wrap justify-center">
+                <div className="mt-3 flex gap-2 flex-wrap justify-center">
                   {content.certifications.slice(0, rules.certifications).map((cert, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                    <Badge key={i} variant="secondary" className="text-xs px-2 py-1">
                       {cert}
                     </Badge>
                   ))}
@@ -177,26 +177,26 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
 
       case 'split':
         return (
-          <div className={baseClasses} style={{ aspectRatio, minHeight: '200px' }}>
-            <div className="h-full flex gap-4 text-xs">
-              <div className="flex-1 flex flex-col gap-2">
+          <div className={baseClasses} style={{ aspectRatio, minHeight: '300px' }}>
+            <div className="h-full flex gap-6 text-sm">
+              <div className="flex-1 flex flex-col gap-3">
                 {rules.logo && (
-                  <div className="w-16 h-8 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 text-[10px] font-medium">
+                  <div className="w-20 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-300 dark:border-blue-700">
                     [LOGO]
                   </div>
                 )}
                 {rules.heading && (
-                  <div className="font-bold text-base leading-tight text-slate-900 dark:text-slate-100">
+                  <div className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">
                     {content.heading}
                   </div>
                 )}
                 {showSubheading && (
-                  <div className="text-sm text-slate-700 dark:text-slate-300 leading-snug">
+                  <div className="text-base text-gray-700 dark:text-gray-300 leading-snug">
                     {content.subheading}
                   </div>
                 )}
                 {showDescription && (
-                  <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                     {formatType === 'upgrade2' && content.description.length > 100
                       ? content.description.substring(0, 100) + '...'
                       : formatType === 'upgrade1' && content.description.length > 60
@@ -205,21 +205,21 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                   </div>
                 )}
               </div>
-              <div className="flex-1 flex flex-col gap-2 border-l border-slate-300 dark:border-slate-600 pl-4">
+              <div className="flex-1 flex flex-col gap-3 border-l-2 border-gray-300 dark:border-gray-600 pl-6">
                 {services.length > 0 && (
-                  <div className="space-y-1">
-                    <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">TJENESTER:</div>
-                    <ul className="list-disc list-inside space-y-0.5 text-xs text-slate-700 dark:text-slate-300">
+                  <div className="space-y-2">
+                    <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">TJENESTER:</div>
+                    <ul className="list-none space-y-1.5 text-sm text-gray-700 dark:text-gray-300">
                       {services.map((s, i) => (
-                        <li key={i} className="leading-tight">{s}</li>
+                        <li key={i} className="leading-tight">• {s}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {(rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) && (
-                  <div className="mt-auto pt-2 border-t border-slate-300 dark:border-slate-600">
-                    <div className="font-semibold text-xs text-slate-800 dark:text-slate-200 mb-1">KONTAKT:</div>
-                    <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="mt-auto pt-3 border-t-2 border-gray-300 dark:border-gray-600">
+                    <div className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2">KONTAKT:</div>
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                       {rules.contactPhone && content.phone && <div>📞 {content.phone}</div>}
                       {rules.contactAddress && content.address && <div>📍 {content.address}</div>}
                       {rules.contactEmail && content.email && <div>✉️ {content.email}</div>}
@@ -228,9 +228,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                   </div>
                 )}
                 {rules.certifications && rules.certifications > 0 && content.certifications.length > 0 && (
-                  <div className="mt-2 flex gap-1 flex-wrap">
+                  <div className="mt-3 flex gap-2 flex-wrap">
                     {content.certifications.slice(0, rules.certifications).map((cert, i) => (
-                      <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                      <Badge key={i} variant="secondary" className="text-xs px-2 py-1">
                         {cert}
                       </Badge>
                     ))}
@@ -243,44 +243,44 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
 
       case 'minimal':
         return (
-          <div className={baseClasses} style={{ aspectRatio, minHeight: '200px' }}>
-            <div className="h-full flex flex-col gap-1 text-xs">
-              <div className="flex items-center justify-between mb-2">
+          <div className={baseClasses} style={{ aspectRatio, minHeight: '300px' }}>
+            <div className="h-full flex flex-col gap-3 text-sm">
+              <div className="flex items-center justify-between mb-3">
                 {rules.logo && (
-                  <div className="w-14 h-7 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 text-[9px] font-medium">
+                  <div className="w-20 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-300 dark:border-blue-700">
                     [LOGO]
                   </div>
                 )}
                 {(rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) && (
-                  <div className="text-[9px] text-slate-600 dark:text-slate-400 text-right">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 text-right space-y-1">
                     {rules.contactPhone && content.phone && <div>📞 {content.phone}</div>}
                     {rules.website && <div>🌐 www.{companyName.toLowerCase().replace(/\s+/g, '')}.no</div>}
                   </div>
                 )}
               </div>
               {rules.heading && (
-                <div className="font-bold text-lg leading-tight text-slate-900 dark:text-slate-100 mb-1">
+                <div className="font-bold text-2xl leading-tight text-gray-900 dark:text-gray-100 mb-2">
                   {content.heading}
                 </div>
               )}
               {showSubheading && (
-                <div className="text-xs text-slate-700 dark:text-slate-300 leading-snug">
+                <div className="text-base text-gray-700 dark:text-gray-300 leading-snug">
                   {content.subheading}
                 </div>
               )}
               {services.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {services.map((s, i) => (
-                    <span key={i} className="text-[9px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300">
+                    <span key={i} className="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-md text-gray-700 dark:text-gray-300 font-medium">
                       {s}
                     </span>
                   ))}
                 </div>
               )}
               {rules.certifications && rules.certifications > 0 && content.certifications.length > 0 && (
-                <div className="mt-2 flex gap-1 flex-wrap">
+                <div className="mt-4 flex gap-2 flex-wrap">
                   {content.certifications.slice(0, rules.certifications).map((cert, i) => (
-                    <Badge key={i} variant="secondary" className="text-[9px] px-1 py-0">
+                    <Badge key={i} variant="secondary" className="text-xs px-2 py-1">
                       {cert}
                     </Badge>
                   ))}
@@ -292,27 +292,27 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
 
       case 'bold':
         return (
-          <div className={baseClasses + " bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950"} style={{ aspectRatio, minHeight: '200px' }}>
-            <div className="h-full flex flex-col gap-3 text-xs">
+          <div className={baseClasses + " bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-300 dark:border-blue-700"} style={{ aspectRatio, minHeight: '300px' }}>
+            <div className="h-full flex flex-col gap-4 text-sm">
               {rules.logo && (
                 <div className="flex items-center justify-between">
-                  <div className="w-20 h-10 bg-blue-200 dark:bg-blue-800 rounded-lg flex items-center justify-center text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+                  <div className="w-24 h-12 bg-blue-200 dark:bg-blue-800 rounded-lg flex items-center justify-center text-blue-800 dark:text-blue-200 text-xs font-bold border-2 border-blue-400 dark:border-blue-600">
                     [LOGO]
                   </div>
                 </div>
               )}
               {rules.heading && (
-                <div className="font-black text-xl leading-tight text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                <div className="font-black text-2xl leading-tight text-gray-900 dark:text-gray-100 uppercase tracking-wide">
                   {content.heading}
                 </div>
               )}
               {showSubheading && (
-                <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-snug">
+                <div className="text-base font-semibold text-gray-800 dark:text-gray-200 leading-snug">
                   {content.subheading}
                 </div>
               )}
               {showDescription && (
-                <div className="text-xs text-slate-700 dark:text-slate-400 leading-relaxed font-medium">
+                <div className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed font-medium">
                   {formatType === 'upgrade2' && content.description.length > 120
                     ? content.description.substring(0, 120) + '...'
                     : formatType === 'upgrade1' && content.description.length > 70
@@ -321,9 +321,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {services.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  <div className="font-bold text-xs text-slate-900 dark:text-slate-100">TJENESTER:</div>
-                  <ul className="list-none space-y-0.5 text-xs text-slate-700 dark:text-slate-300">
+                <div className="mt-3 space-y-2">
+                  <div className="font-bold text-sm text-gray-900 dark:text-gray-100">TJENESTER:</div>
+                  <ul className="list-none space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     {services.map((s, i) => (
                       <li key={i} className="leading-tight font-medium">▶ {s}</li>
                     ))}
@@ -331,9 +331,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {(rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) && (
-                <div className="mt-auto pt-3 border-t-2 border-slate-400 dark:border-slate-500">
-                  <div className="font-bold text-xs text-slate-900 dark:text-slate-100 mb-1">KONTAKT:</div>
-                  <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                <div className="mt-auto pt-4 border-t-2 border-blue-300 dark:border-blue-600">
+                  <div className="font-bold text-sm text-gray-900 dark:text-gray-100 mb-2">KONTAKT:</div>
+                  <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400 font-medium">
                     {rules.contactPhone && content.phone && <div>📞 {content.phone}</div>}
                     {rules.contactAddress && content.address && <div>📍 {content.address}</div>}
                     {rules.contactEmail && content.email && <div>✉️ {content.email}</div>}
@@ -342,9 +342,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {rules.certifications && rules.certifications > 0 && content.certifications.length > 0 && (
-                <div className="mt-2 flex gap-1 flex-wrap">
+                <div className="mt-3 flex gap-2 flex-wrap">
                   {content.certifications.slice(0, rules.certifications).map((cert, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                    <Badge key={i} variant="secondary" className="text-xs px-2 py-1 bg-blue-200 text-blue-800">
                       {cert}
                     </Badge>
                   ))}
@@ -356,27 +356,27 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
 
       default: // 'classic'
         return (
-          <div className={baseClasses} style={{ aspectRatio, minHeight: '200px' }}>
-            <div className="h-full flex flex-col gap-2 text-xs">
+          <div className={baseClasses} style={{ aspectRatio, minHeight: '300px' }}>
+            <div className="h-full flex flex-col gap-3 text-sm">
               {rules.logo && (
                 <div className="flex items-center justify-start mb-2">
-                  <div className="w-16 h-8 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 text-[10px] font-medium">
+                  <div className="w-20 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-300 dark:border-blue-700">
                     [LOGO]
                   </div>
                 </div>
               )}
               {rules.heading && (
-                <div className="font-bold text-base leading-tight text-slate-900 dark:text-slate-100">
+                <div className="font-bold text-xl leading-tight text-gray-900 dark:text-gray-100">
                   {content.heading}
                 </div>
               )}
               {showSubheading && (
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-snug">
+                <div className="text-base text-gray-700 dark:text-gray-300 leading-snug">
                   {content.subheading}
                 </div>
               )}
               {showDescription && (
-                <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
                   {formatType === 'upgrade2' && content.description.length > 150
                     ? content.description.substring(0, 150) + '...'
                     : formatType === 'upgrade1' && content.description.length > 80
@@ -385,19 +385,19 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {services.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  <div className="font-semibold text-xs text-slate-800 dark:text-slate-200">TJENESTER:</div>
-                  <ul className="list-disc list-inside space-y-0.5 text-xs text-slate-700 dark:text-slate-300 ml-2">
+                <div className="mt-3 space-y-2">
+                  <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">TJENESTER:</div>
+                  <ul className="list-none space-y-1.5 text-sm text-gray-700 dark:text-gray-300">
                     {services.map((s, i) => (
-                      <li key={i} className="leading-tight">{s}</li>
+                      <li key={i} className="leading-tight">• {s}</li>
                     ))}
                   </ul>
                 </div>
               )}
               {(rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) && (
-                <div className="mt-auto pt-2 border-t border-slate-300 dark:border-slate-600">
-                  <div className="font-semibold text-xs text-slate-800 dark:text-slate-200 mb-1">KONTAKT:</div>
-                  <div className="space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                <div className="mt-auto pt-4 border-t-2 border-gray-300 dark:border-gray-600">
+                  <div className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2">KONTAKT:</div>
+                  <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                     {rules.contactPhone && content.phone && <div>📞 {content.phone}</div>}
                     {rules.contactAddress && content.address && <div>📍 {content.address}</div>}
                     {rules.contactEmail && content.email && <div>✉️ {content.email}</div>}
@@ -406,9 +406,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
                 </div>
               )}
               {rules.certifications && rules.certifications > 0 && content.certifications.length > 0 && (
-                <div className="mt-2 flex gap-1 flex-wrap">
+                <div className="mt-3 flex gap-2 flex-wrap">
                   {content.certifications.slice(0, rules.certifications).map((cert, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                    <Badge key={i} variant="secondary" className="text-xs px-2 py-1">
                       {cert}
                     </Badge>
                   ))}
@@ -435,13 +435,13 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Visual Layout Preview */}
-        <div className="w-full">
+        <div className="w-full mb-4">
           {renderLayout()}
         </div>
 
-        {/* Layout Guidelines */}
-        <div className="text-xs text-muted-foreground space-y-1 bg-slate-50 dark:bg-slate-900/50 p-3 rounded">
-          <p className="font-semibold text-slate-700 dark:text-slate-300">
+        {/* Layout Guidelines - Separate section below preview */}
+        <div className="text-xs text-muted-foreground space-y-1 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+          <p className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
             Layout-tips ({layoutVariant}):
           </p>
           <ul className="list-disc list-inside space-y-0.5 ml-2">
