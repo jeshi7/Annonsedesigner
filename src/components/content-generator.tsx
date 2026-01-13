@@ -200,6 +200,12 @@ export function ContentGenerator({
     return ['tredjedel', 'halvside', 'helside', 'spread'].includes(formatKey);
   };
 
+  // Check if format is banner or larger (banner, tredjedel, halvside, helside, spread)
+  const isBannerOrLarger = (formatKey: string | null): boolean => {
+    if (!formatKey) return false;
+    return ['banner', 'tredjedel', 'halvside', 'helside', 'spread'].includes(formatKey);
+  };
+
   // Format content for copy - Bestilt versjon (minimalt)
   const formatOrderedVersion = () => {
     const lines = [`[LOGO]`, ``];
@@ -214,7 +220,26 @@ export function ContentGenerator({
     
     lines.push(``);
     
-    if (orderedRules?.website) {
+    // Kontaktinformasjon - alltid inkluder for banner og oppover
+    const shouldIncludeContact = isBannerOrLarger(content.orderedFormatKey);
+    
+    if (shouldIncludeContact || orderedRules?.contactPhone || orderedRules?.contactAddress || orderedRules?.contactEmail || orderedRules?.website) {
+      if (shouldIncludeContact) {
+        // For banner og oppover, inkluder all tilgjengelig kontaktinfo
+        lines.push(`KONTAKT:`);
+        if (content.phone) lines.push(`📞 ${content.phone}`);
+        if (content.address) lines.push(`📍 ${content.address}`);
+        if (content.email) lines.push(`✉️ ${content.email}`);
+        if (orderedRules?.website || shouldIncludeContact) {
+          lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+        }
+      } else {
+        // For visittkort, følg reglene
+        if (orderedRules?.website) {
+          lines.push(`www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+        }
+      }
+    } else if (orderedRules?.website) {
       lines.push(`www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
     }
     
@@ -258,8 +283,8 @@ export function ContentGenerator({
       lines.push(``);
     }
     
-    // Kontaktinformasjon - alltid inkluder for tredjedel og oppover
-    const shouldIncludeContact = isTredjedelOrLarger(content.upgradeFormatKey);
+    // Kontaktinformasjon - alltid inkluder for banner og oppover
+    const shouldIncludeContact = isBannerOrLarger(content.upgradeFormatKey);
     
     if (shouldIncludeContact || rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) {
       lines.push(`KONTAKT:`);
@@ -371,8 +396,8 @@ export function ContentGenerator({
       lines.push(``);
     }
     
-    // Kontaktinformasjon - alltid inkluder for tredjedel og oppover
-    const shouldIncludeContact = isTredjedelOrLarger(content.secondUpgradeFormatKey);
+    // Kontaktinformasjon - alltid inkluder for banner og oppover
+    const shouldIncludeContact = isBannerOrLarger(content.secondUpgradeFormatKey);
     
     if (shouldIncludeContact || rules.contactPhone || rules.contactAddress || rules.contactEmail || rules.website) {
       lines.push(`KONTAKT:`);

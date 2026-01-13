@@ -701,14 +701,14 @@ export const FORMAT_CONTENT_RULES: Record<string, {
     },
   },
   banner: {
-    // Bestilt: Minimalt (3 elementer)
+    // Bestilt: Minimalt (4-5 elementer) - inkluder kontaktinfo
     ordered: {
       logo: true,
       heading: true,
       subheading: false,
       description: false,
       serviceList: 0,
-      contactPhone: false,
+      contactPhone: true, // Legg til telefon for banner
       contactAddress: false,
       contactEmail: false,
       openingHours: false,
