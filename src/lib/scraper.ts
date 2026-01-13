@@ -19,6 +19,8 @@ export interface ScrapedData {
   certifications: string[];
   allPageContent: string; // All text from all pages
   pagesScraped: number;
+  potentialHeadings: string[]; // Potensielle headings fra nettsiden
+  potentialSubheadings: string[]; // Potensielle subheadings fra nettsiden
 }
 
 // Scrape multiple pages from a website
@@ -36,6 +38,8 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
     let allServices: string[] = [];
     let allImages: string[] = [];
     let allCertifications: string[] = [];
+    let allHeadings: string[] = [];
+    let allSubheadings: string[] = [];
     
     let mainData: Partial<ScrapedData> = {
       companyName: null,
@@ -98,6 +102,13 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
         const pageCerts = extractCertifications($);
         allCertifications.push(...pageCerts);
 
+        // Extract headings and subheadings (especially from first page)
+        const pageHeadings = extractHeadings($);
+        allHeadings.push(...pageHeadings);
+        
+        const pageSubheadings = extractSubheadings($);
+        allSubheadings.push(...pageSubheadings);
+
         // Find internal links to crawl
         $('a[href]').each((_, el) => {
           const href = $(el).attr('href');
@@ -124,6 +135,8 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
     const uniqueServices = [...new Set(allServices)].slice(0, 20);
     const uniqueImages = [...new Set(allImages)].slice(0, 15);
     const uniqueCerts = [...new Set(allCertifications)].slice(0, 10);
+    const uniqueHeadings = [...new Set(allHeadings)].filter(h => h.length > 5 && h.length < 80).slice(0, 15);
+    const uniqueSubheadings = [...new Set(allSubheadings)].filter(s => s.length > 10 && s.length < 150).slice(0, 10);
 
     return {
       companyName: mainData.companyName || null,
@@ -138,6 +151,8 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
       certifications: uniqueCerts,
       allPageContent: allContent.slice(0, 50000), // Limit content size
       pagesScraped: visitedUrls.size,
+      potentialHeadings: uniqueHeadings,
+      potentialSubheadings: uniqueSubheadings,
     };
   } catch (error) {
     console.error('Error scraping website:', error);
@@ -154,6 +169,8 @@ export async function scrapeWebsite(url: string, maxPages: number = 10): Promise
       certifications: [],
       allPageContent: '',
       pagesScraped: 0,
+      potentialHeadings: [],
+      potentialSubheadings: [],
     };
   }
 }
@@ -339,4 +356,56 @@ function extractCertifications($: cheerio.CheerioAPI): string[] {
   if (pageText.includes('miljøfyrtårn')) certs.push('Miljøfyrtårn');
 
   return [...new Set(certs)];
+}
+
+function extractHeadings($: cheerio.CheerioAPI): string[] {
+  const headings: string[] = [];
+  
+  // Hent fra h1, h2, h3 - prioriter h1 og h2
+  $('h1, h2').each((_, el) => {
+    const text = $(el).text().trim();
+    // Filtrer ut navigasjon, footer, etc.
+    if (text && 
+        text.length > 5 && 
+        text.length < 80 &&
+        !text.toLowerCase().includes('menu') &&
+        !text.toLowerCase().includes('kontakt') &&
+        !text.toLowerCase().includes('cookie') &&
+        !text.toLowerCase().includes('privacy')) {
+      headings.push(text);
+    }
+  });
+  
+  // Hent også fra hero/heroine sections
+  $('.hero h1, .hero h2, .heroine h1, .heroine h2, .banner h1, .banner h2').each((_, el) => {
+    const text = $(el).text().trim();
+    if (text && text.length > 5 && text.length < 80) {
+      headings.push(text);
+    }
+  });
+  
+  return headings;
+}
+
+function extractSubheadings($: cheerio.CheerioAPI): string[] {
+  const subheadings: string[] = [];
+  
+  // Hent fra h3, h4, og første setning i paragraf
+  $('h3, h4').each((_, el) => {
+    const text = $(el).text().trim();
+    if (text && text.length > 10 && text.length < 150) {
+      subheadings.push(text);
+    }
+  });
+  
+  // Hent første setning fra viktige paragraf
+  $('main p, .about-us p, .om-oss p, article p').slice(0, 5).each((_, el) => {
+    const text = $(el).text().trim();
+    const firstSentence = text.split(/[.!?]/)[0].trim();
+    if (firstSentence && firstSentence.length > 15 && firstSentence.length < 150) {
+      subheadings.push(firstSentence);
+    }
+  });
+  
+  return subheadings;
 }
