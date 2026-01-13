@@ -64,6 +64,61 @@ export interface GeneratedContent {
   personalComment: string;
 }
 
+// Email template for ordered version (no upgrade)
+const EMAIL_TEMPLATE_ORDERED = `Hei, {KUNDENAVN} 😊
+
+Jeg er designeren på dette prosjektet, og har vært heldig å få designe annonsen du har bestilt.
+
+{PERSONLIG_KOMMENTAR}
+
+Annonsen er nå klar! Den er designet som {BESTILT_FORMAT} ({BESTILT_DIMENSJONER}) som du bestilte.
+
+Annonsen er vedlagt så det er bare å komme tilbake til meg hvis du har noen endringer eller spørsmål :)
+
+Ønsker deg en god dag 😊`;
+
+interface EmailDraftParams {
+  contactName: string;
+  orderedFormat: string;
+  orderedDimensions: string;
+  upgradeFormat: string;
+  upgradeDimensions: string;
+  priceDifference: number;
+  personalComment: string;
+}
+
+function generateEmailDraftOrdered(params: {
+  contactName: string;
+  orderedFormat: string;
+  orderedDimensions: string;
+  personalComment: string;
+}): string {
+  let email = EMAIL_TEMPLATE_ORDERED
+    .replace('{KUNDENAVN}', params.contactName)
+    .replace('{PERSONLIG_KOMMENTAR}', params.personalComment)
+    .replace('{BESTILT_FORMAT}', params.orderedFormat.toLowerCase())
+    .replace('{BESTILT_DIMENSJONER}', params.orderedDimensions);
+  
+  return email;
+}
+
+function generateEmailDraft(params: EmailDraftParams): string {
+  let email = EMAIL_TEMPLATE
+    .replace('{KUNDENAVN}', params.contactName)
+    .replace('{PERSONLIG_KOMMENTAR}', params.personalComment)
+    .replace('{UPGRADE_FORMAT}', params.upgradeFormat.toLowerCase())
+    .replace('{UPGRADE_DIMENSJONER}', params.upgradeDimensions)
+    .replace('{BESTILT_FORMAT}', params.orderedFormat.toLowerCase())
+    .replace('{BESTILT_DIMENSJONER}', params.orderedDimensions)
+    .replace('{PRIS_DIFFERANSE}', params.priceDifference.toLocaleString('nb-NO'));
+  
+  // Add interactive text if applicable
+  const interaktivTekst = 'På den interaktive annonsen har jeg satt opp noen klikkbare knapper til dine sosiale medier sider.\nHer er link til den interaktive annonsen: [LINK]';
+  email = email.replace('{INTERAKTIV_TEKST}', interaktivTekst);
+  
+  return email;
+}
+
 export async function generateContent(
   website: string,
   industry: IndustryKey | string,
@@ -311,61 +366,6 @@ export async function generateContent(
     priceDifferenceSecond,
     personalComment,
   };
-}
-
-interface EmailDraftParams {
-  contactName: string;
-  orderedFormat: string;
-  orderedDimensions: string;
-  upgradeFormat: string;
-  upgradeDimensions: string;
-  priceDifference: number;
-  personalComment: string;
-}
-
-// Email template for ordered version (no upgrade)
-const EMAIL_TEMPLATE_ORDERED = `Hei, {KUNDENAVN} 😊
-
-Jeg er designeren på dette prosjektet, og har vært heldig å få designe annonsen du har bestilt.
-
-{PERSONLIG_KOMMENTAR}
-
-Annonsen er nå klar! Den er designet som {BESTILT_FORMAT} ({BESTILT_DIMENSJONER}) som du bestilte.
-
-Annonsen er vedlagt så det er bare å komme tilbake til meg hvis du har noen endringer eller spørsmål :)
-
-Ønsker deg en god dag 😊`;
-
-function generateEmailDraftOrdered(params: {
-  contactName: string;
-  orderedFormat: string;
-  orderedDimensions: string;
-  personalComment: string;
-}): string {
-  let email = EMAIL_TEMPLATE_ORDERED
-    .replace('{KUNDENAVN}', params.contactName)
-    .replace('{PERSONLIG_KOMMENTAR}', params.personalComment)
-    .replace('{BESTILT_FORMAT}', params.orderedFormat.toLowerCase())
-    .replace('{BESTILT_DIMENSJONER}', params.orderedDimensions);
-  
-  return email;
-}
-
-function generateEmailDraft(params: EmailDraftParams): string {
-  let email = EMAIL_TEMPLATE
-    .replace('{KUNDENAVN}', params.contactName)
-    .replace('{PERSONLIG_KOMMENTAR}', params.personalComment)
-    .replace('{UPGRADE_FORMAT}', params.upgradeFormat.toLowerCase())
-    .replace('{UPGRADE_DIMENSJONER}', params.upgradeDimensions)
-    .replace('{BESTILT_FORMAT}', params.orderedFormat.toLowerCase())
-    .replace('{BESTILT_DIMENSJONER}', params.orderedDimensions)
-    .replace('{PRIS_DIFFERANSE}', params.priceDifference.toLocaleString('nb-NO'));
-  
-  // Add interactive text if applicable
-  const interaktivTekst = 'På den interaktive annonsen har jeg satt opp noen klikkbare knapper til dine sosiale medier sider.\nHer er link til den interaktive annonsen: [LINK]';
-  email = email.replace('{INTERAKTIV_TEKST}', interaktivTekst);
-  
-  return email;
 }
 
 // Database functions removed for Vercel compatibility
