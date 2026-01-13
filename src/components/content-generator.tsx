@@ -982,31 +982,40 @@ export function ContentGenerator({
                 <Eye className="h-5 w-5" />
                 Visuell layout-forslag
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-4">
                 Disse viser hvordan annonsene skal se ut visuelt. Layouten endres automatisk når du genererer nytt innhold.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AdLayoutPreview 
-                content={content} 
-                companyName={companyName} 
-                formatType="ordered" 
-              />
-              {content.upgradeFormat && (
+            {content.orderedFormatKey ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <AdLayoutPreview 
                   content={content} 
                   companyName={companyName} 
-                  formatType="upgrade1" 
+                  formatType="ordered" 
                 />
-              )}
-              {content.secondUpgradeFormat && (
-                <AdLayoutPreview 
-                  content={content} 
-                  companyName={companyName} 
-                  formatType="upgrade2" 
-                />
-              )}
-            </div>
+                {content.upgradeFormat && (
+                  <AdLayoutPreview 
+                    content={content} 
+                    companyName={companyName} 
+                    formatType="upgrade1" 
+                  />
+                )}
+                {content.secondUpgradeFormat && (
+                  <AdLayoutPreview 
+                    content={content} 
+                    companyName={companyName} 
+                    formatType="upgrade2" 
+                  />
+                )}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Generer innhold først for å se layout-forslag</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
 

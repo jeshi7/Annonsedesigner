@@ -20,15 +20,11 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
     ? content.upgradeFormatKey 
     : content.secondUpgradeFormatKey;
 
-  if (!formatKey) return null;
-
   const formatDetails = formatType === 'ordered'
     ? content.orderedFormat
     : formatType === 'upgrade1'
     ? content.upgradeFormat
     : content.secondUpgradeFormat;
-
-  if (!formatDetails) return null;
 
   const rules = formatType === 'ordered'
     ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.ordered
@@ -36,7 +32,24 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
     ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade1
     : FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade2;
 
-  if (!rules) return null;
+  // If we don't have the required data, show a placeholder
+  if (!formatKey || !formatDetails || !rules) {
+    return (
+      <Card className="border-2 border-dashed">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Layout-forslag: {formatType === 'ordered' ? 'Bestilt' : formatType === 'upgrade1' ? 'Upgrade 1' : 'Upgrade 2'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground text-center py-8">
+            Vent på at innholdet genereres...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Calculate aspect ratio based on dimensions
   const getAspectRatio = (dimensions: string): string => {
@@ -72,8 +85,8 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
       <CardContent>
         {/* Visual Layout Preview */}
         <div 
-          className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-4 mb-4"
-          style={{ aspectRatio }}
+          className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-4 mb-4 min-h-[200px] w-full"
+          style={{ aspectRatio, minHeight: '200px' }}
         >
           <div className="h-full flex flex-col gap-2 text-xs">
             {/* Logo Area */}
