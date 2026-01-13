@@ -130,8 +130,19 @@ export function ContentGenerator({
       lines.push(``);
     }
     
+    // Upgrade 1: Bruk kortere beskrivelse (første setning eller kort versjon)
     if (rules.description && content.description) {
-      lines.push(content.description);
+      // Ta første setning eller første del av beskrivelsen for Upgrade 1
+      const firstSentence = content.description.split(/[.!?]/)[0].trim();
+      if (firstSentence && firstSentence.length > 20) {
+        lines.push(firstSentence + '.');
+      } else {
+        // Hvis første setning er for kort, ta første del (maks 150 tegn)
+        const shortDesc = content.description.length > 150 
+          ? content.description.substring(0, 147) + '...'
+          : content.description;
+        lines.push(shortDesc);
+      }
       lines.push(``);
     }
     
@@ -187,16 +198,56 @@ export function ContentGenerator({
       lines.push(``);
     }
     
+    // Upgrade 2 skal ha 2-3x lengre beskrivelse enn Upgrade 1
     if (rules.description && content.description) {
-      lines.push(content.description);
+      // Bygg en lengre beskrivelse for Upgrade 2
+      let extendedDescription = content.description;
+      
+      // Hvis vi har scraped content, legg til mer informasjon
+      if (content.scrapedData.allPageContent && content.scrapedData.allPageContent.length > 100) {
+        const sentences = content.scrapedData.allPageContent
+          .split(/[.!?]/)
+          .map(s => s.trim())
+          .filter(s => s.length > 30 && s.length < 200 && !s.toLowerCase().includes('cookie'))
+          .slice(0, 4); // Ta opp til 4 ekstra setninger
+        
+        if (sentences.length > 0) {
+          // Kombiner original beskrivelse med ekstra setninger
+          extendedDescription = content.description;
+          if (!extendedDescription.endsWith('.') && !extendedDescription.endsWith('!') && !extendedDescription.endsWith('?')) {
+            extendedDescription += '.';
+          }
+          extendedDescription += ' ' + sentences.join('. ') + '.';
+        }
+      } else {
+        // Hvis ikke scraped content, utvid beskrivelsen med mer detaljer
+        extendedDescription = content.description;
+        if (!extendedDescription.endsWith('.') && !extendedDescription.endsWith('!') && !extendedDescription.endsWith('?')) {
+          extendedDescription += '.';
+        }
+        extendedDescription += ` Vi har lang erfaring og er dedikert til å levere løsninger som overgår forventningene. Vårt team består av erfarne fagfolk som setter kundens behov i sentrum.`;
+      }
+      
+      lines.push(extendedDescription);
       lines.push(``);
     }
     
     // Services - bruk riktig antall basert på upgrade2 rules (mer enn upgrade1)
+    // Upgrade 2 skal ha mer detaljert tjenesteliste
     const serviceCount = rules.serviceList || 0;
     if (serviceCount > 0) {
       lines.push(`TJENESTER:`);
-      selectedServices.slice(0, serviceCount).forEach(s => lines.push(`• ${s}`));
+      const servicesToShow = selectedServices.slice(0, serviceCount);
+      servicesToShow.forEach(s => {
+        // For Upgrade 2, legg til korte beskrivelser eller mer detaljer
+        lines.push(`• ${s}`);
+      });
+      
+      // Hvis vi har flere tjenester enn Upgrade 1, legg til en ekstra linje
+      if (serviceCount > (upgrade1Rules?.serviceList || 0)) {
+        lines.push(``);
+        lines.push(`Vi tilbyr også rådgivning og tilpassede løsninger for alle typer prosjekter. Kontakt oss for en uforpliktende samtale.`);
+      }
       lines.push(``);
     }
     
@@ -204,11 +255,17 @@ export function ContentGenerator({
     if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
     if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
     if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
-    if (rules.openingHours) {
-      // Legg til åpningstider hvis tilgjengelig
+    if (rules.openingHours && content.scrapedData.openingHours) {
+      lines.push(`🕐 Åpningstider: ${content.scrapedData.openingHours}`);
     }
     if (rules.website) {
       lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    }
+    
+    // Upgrade 2: Legg til ekstra informasjon hvis tilgjengelig
+    if (content.scrapedData.companyName && content.scrapedData.companyName !== companyName) {
+      lines.push(``);
+      lines.push(`Om oss: ${content.scrapedData.companyName} er en pålitelig partner med fokus på kvalitet og kundetilfredshet.`);
     }
     
     // Certifications - flere enn upgrade1
