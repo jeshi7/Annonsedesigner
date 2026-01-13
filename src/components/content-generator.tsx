@@ -1,0 +1,628 @@
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { CopyButton } from '@/components/copy-button';
+import { 
+  HEADINGS, 
+  SUBHEADINGS, 
+  SERVICE_LISTS,
+  IndustryKey,
+  getRandomHeading,
+  getRandomSubheading,
+  getRandomServices,
+} from '@/lib/text-library';
+import type { GeneratedContent } from '@/lib/actions';
+import { 
+  RefreshCw, 
+  Mail, 
+  FileText, 
+  Image as ImageIcon, 
+  Phone, 
+  MapPin, 
+  Globe,
+  Award,
+  Sparkles,
+  ArrowUp,
+  Check,
+  X,
+  ExternalLink,
+} from 'lucide-react';
+
+interface ContentGeneratorProps {
+  content: GeneratedContent;
+  industry: IndustryKey;
+  companyName: string;
+  onContentChange: (content: Partial<GeneratedContent>) => void;
+}
+
+export function ContentGenerator({ 
+  content, 
+  industry,
+  companyName,
+  onContentChange 
+}: ContentGeneratorProps) {
+  const [activeTab, setActiveTab] = useState('innhold');
+  const [selectedServices, setSelectedServices] = useState<string[]>(content.services);
+
+  const regenerateHeading = () => {
+    const newHeading = getRandomHeading(industry);
+    onContentChange({ heading: newHeading });
+  };
+
+  const regenerateSubheading = () => {
+    const newSubheading = getRandomSubheading(industry);
+    onContentChange({ subheading: newSubheading });
+  };
+
+  const regenerateServices = () => {
+    const newServices = getRandomServices(industry, 8);
+    setSelectedServices(newServices);
+    onContentChange({ services: newServices });
+  };
+
+  const toggleService = (service: string) => {
+    const updated = selectedServices.includes(service)
+      ? selectedServices.filter(s => s !== service)
+      : [...selectedServices, service];
+    setSelectedServices(updated);
+    onContentChange({ services: updated });
+  };
+
+  const allServices = SERVICE_LISTS[industry];
+
+  // Format content for copy
+  const formatOrderedVersion = () => {
+    return `[LOGO]
+
+${content.heading}
+
+${content.orderedFormat.name} (${content.orderedFormat.dimensions})
+
+www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
+  };
+
+  const formatUpgradeVersion = () => {
+    const lines = [
+      `[LOGO]`,
+      ``,
+      content.heading,
+      content.subheading,
+      ``,
+      content.description,
+      ``,
+      `TJENESTER:`,
+      ...selectedServices.map(s => `• ${s}`),
+      ``,
+      `KONTAKT:`,
+    ];
+
+    if (content.phone) lines.push(`📞 ${content.phone}`);
+    if (content.address) lines.push(`📍 ${content.address}`);
+    if (content.email) lines.push(`✉️ ${content.email}`);
+    lines.push(`🌐 ${content.scrapedData.companyName ? `www.${companyName.toLowerCase().replace(/\s+/g, '')}.no` : 'www.nettside.no'}`);
+
+    if (content.certifications.length > 0) {
+      lines.push(``, `SERTIFISERINGER:`);
+      content.certifications.forEach(c => lines.push(`[${c}]`));
+    }
+
+    return lines.join('\n');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Format Overview - All three levels with bonus calculator */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Bestilt versjon */}
+        <Card className="border-muted">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Bestilt versjon</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-semibold">{content.orderedFormat.name}</p>
+                <p className="text-sm text-muted-foreground">{content.orderedFormat.dimensions}</p>
+              </div>
+              <Badge variant="secondary" className="text-base">
+                kr {content.orderedFormat.price.toLocaleString('nb-NO')}
+              </Badge>
+            </div>
+            <div className="mt-3 pt-3 border-t border-muted">
+              <p className="text-xs text-muted-foreground">Din bonus: kr 0</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Upgrade 1 */}
+        {content.upgradeFormat && (
+          <Card className="border-primary/50 bg-primary/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-bl font-medium">
+              ANBEFALT
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-primary flex items-center gap-1">
+                <ArrowUp className="h-4 w-4" />
+                Upgrade 1
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-semibold">{content.upgradeFormat.name}</p>
+                  <p className="text-sm text-muted-foreground">{content.upgradeFormat.dimensions}</p>
+                </div>
+                <div className="text-right">
+                  <Badge className="text-base">
+                    kr {content.upgradeFormat.price.toLocaleString('nb-NO')}
+                  </Badge>
+                  <p className="text-xs text-primary mt-1">
+                    +kr {content.priceDifference.toLocaleString('nb-NO')}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-primary/20">
+                <p className="text-xs text-primary font-medium flex items-center gap-1">
+                  💰 Din bonus: ~kr {Math.round(content.priceDifference * 0.15).toLocaleString('nb-NO')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upgrade 2 */}
+        {content.secondUpgradeFormat && (
+          <Card className="border-amber-500/50 bg-amber-500/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-bl font-medium">
+              BESTE BONUS
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <ArrowUp className="h-4 w-4" />
+                <ArrowUp className="h-4 w-4 -ml-2" />
+                Upgrade 2
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-semibold">{content.secondUpgradeFormat.name}</p>
+                  <p className="text-sm text-muted-foreground">{content.secondUpgradeFormat.dimensions}</p>
+                </div>
+                <div className="text-right">
+                  <Badge className="bg-amber-500 hover:bg-amber-600 text-base">
+                    kr {content.secondUpgradeFormat.price.toLocaleString('nb-NO')}
+                  </Badge>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                    +kr {content.priceDifferenceSecond.toLocaleString('nb-NO')}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-amber-500/20">
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                  🔥 Din bonus: ~kr {Math.round(content.priceDifferenceSecond * 0.15).toLocaleString('nb-NO')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Daily earnings potential */}
+      <Card className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/30">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">📈 Daglig inntektspotensial</p>
+              <p className="text-xs text-muted-foreground">Basert på 5-6 upgrades per dag</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                kr {Math.round((content.priceDifference * 0.15 * 5)).toLocaleString('nb-NO')} - {Math.round((content.priceDifferenceSecond * 0.15 * 6)).toLocaleString('nb-NO')}
+              </p>
+              <p className="text-xs text-muted-foreground">per dag i bonus</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4 h-12">
+          <TabsTrigger value="innhold" className="gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Innhold</span>
+          </TabsTrigger>
+          <TabsTrigger value="bilder" className="gap-2">
+            <ImageIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Bilder</span>
+          </TabsTrigger>
+          <TabsTrigger value="epost" className="gap-2">
+            <Mail className="h-4 w-4" />
+            <span className="hidden sm:inline">E-post</span>
+          </TabsTrigger>
+          <TabsTrigger value="eksport" className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Eksport</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Innhold Tab */}
+        <TabsContent value="innhold" className="space-y-6">
+          {/* Heading */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Heading</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={regenerateHeading}>
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Ny
+                  </Button>
+                  <CopyButton text={content.heading} label="Kopier" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Input
+                value={content.heading}
+                onChange={(e) => onContentChange({ heading: e.target.value })}
+                className="text-lg font-semibold bg-background/50"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {HEADINGS[industry].slice(0, 5).map((h, i) => (
+                  <Badge 
+                    key={i} 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-primary/20"
+                    onClick={() => onContentChange({ heading: h })}
+                  >
+                    {h}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Subheading */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Subheading</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={regenerateSubheading}>
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Ny
+                  </Button>
+                  <CopyButton text={content.subheading} label="Kopier" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={content.subheading}
+                onChange={(e) => onContentChange({ subheading: e.target.value })}
+                rows={2}
+                className="bg-background/50 resize-none"
+              />
+              <div className="mt-3 space-y-2">
+                {SUBHEADINGS[industry].slice(0, 3).map((s, i) => (
+                  <p 
+                    key={i} 
+                    className="text-sm text-muted-foreground cursor-pointer hover:text-foreground p-2 rounded hover:bg-muted/50"
+                    onClick={() => onContentChange({ subheading: s })}
+                  >
+                    {s}
+                  </p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Description */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Beskrivelse</CardTitle>
+                <CopyButton text={content.description} label="Kopier" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={content.description}
+                onChange={(e) => onContentChange({ description: e.target.value })}
+                rows={4}
+                className="bg-background/50 resize-none"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Services */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Tjenester ({selectedServices.length} valgt)</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={regenerateServices}>
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Nye
+                  </Button>
+                  <CopyButton text={selectedServices.map(s => `• ${s}`).join('\n')} label="Kopier" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {allServices.map((service, i) => (
+                  <Badge
+                    key={i}
+                    variant={selectedServices.includes(service) ? 'default' : 'outline'}
+                    className="cursor-pointer transition-all"
+                    onClick={() => toggleService(service)}
+                  >
+                    {selectedServices.includes(service) && <Check className="h-3 w-3 mr-1" />}
+                    {service}
+                  </Badge>
+                ))}
+              </div>
+              {content.scrapedData.services.length > 0 && (
+                <>
+                  <Separator className="my-4" />
+                  <p className="text-sm text-muted-foreground mb-2">Fra nettsiden:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {content.scrapedData.services.map((service, i) => (
+                      <Badge
+                        key={i}
+                        variant={selectedServices.includes(service) ? 'default' : 'secondary'}
+                        className="cursor-pointer"
+                        onClick={() => toggleService(service)}
+                      >
+                        {service}
+                      </Badge>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Contact Info */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Kontaktinformasjon</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  <Input
+                    value={content.phone || ''}
+                    onChange={(e) => onContentChange({ phone: e.target.value })}
+                    placeholder="Telefon"
+                    className="bg-background/50"
+                  />
+                  {content.phone && <CopyButton text={content.phone} label="" size="icon" />}
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <Input
+                    value={content.email || ''}
+                    onChange={(e) => onContentChange({ email: e.target.value })}
+                    placeholder="E-post"
+                    className="bg-background/50"
+                  />
+                  {content.email && <CopyButton text={content.email} label="" size="icon" />}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground" />
+                <Input
+                  value={content.address || ''}
+                  onChange={(e) => onContentChange({ address: e.target.value })}
+                  placeholder="Adresse"
+                  className="bg-background/50 flex-1"
+                />
+                {content.address && <CopyButton text={content.address} label="" size="icon" />}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Certifications */}
+          {content.certifications.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Sertifiseringer funnet
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {content.certifications.map((cert, i) => (
+                    <Badge key={i} variant="secondary">
+                      {cert}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Bilder Tab */}
+        <TabsContent value="bilder" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Bilder fra nettsiden ({content.images.length})
+              </CardTitle>
+              <CardDescription>
+                Klikk på et bilde for å åpne i ny fane
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {content.images.length > 0 ? (
+                <div className="image-grid">
+                  {content.images.map((img, i) => (
+                    <a 
+                      key={i} 
+                      href={img} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block relative group"
+                    >
+                      <img
+                        src={img}
+                        alt={`Bilde ${i + 1}`}
+                        className="w-full h-full object-cover rounded-lg border border-border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <ExternalLink className="h-6 w-6 text-white" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Ingen bilder funnet på nettsiden
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* E-post Tab */}
+        <TabsContent value="epost" className="space-y-4">
+          {/* Email for Upgrade 1 */}
+          <Card className="border-primary/50">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-primary">
+                    <Mail className="h-5 w-5" />
+                    E-post for Upgrade 1 ({content.upgradeFormat?.name})
+                  </CardTitle>
+                  <CardDescription>
+                    +kr {content.priceDifference.toLocaleString('nb-NO')} fra bestilt
+                  </CardDescription>
+                </div>
+                <CopyButton text={content.emailDraft} label="Kopier e-post" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={content.emailDraft}
+                onChange={(e) => onContentChange({ emailDraft: e.target.value })}
+                rows={16}
+                className="bg-background/50 font-mono text-sm"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Email for Upgrade 2 */}
+          {content.secondUpgradeFormat && content.emailDraftSecondUpgrade && (
+            <Card className="border-amber-500/50">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                      <Mail className="h-5 w-5" />
+                      E-post for Upgrade 2 ({content.secondUpgradeFormat.name})
+                    </CardTitle>
+                    <CardDescription>
+                      +kr {content.priceDifferenceSecond.toLocaleString('nb-NO')} fra bestilt
+                    </CardDescription>
+                  </div>
+                  <CopyButton text={content.emailDraftSecondUpgrade} label="Kopier e-post" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={content.emailDraftSecondUpgrade}
+                  onChange={(e) => onContentChange({ emailDraftSecondUpgrade: e.target.value })}
+                  rows={16}
+                  className="bg-background/50 font-mono text-sm"
+                />
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Eksport Tab */}
+        <TabsContent value="eksport" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Ordered Version */}
+            <Card className="border-muted">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Bestilt versjon</CardTitle>
+                  <CopyButton text={formatOrderedVersion()} label="Kopier alt" />
+                </div>
+                <CardDescription>
+                  {content.orderedFormat.name} ({content.orderedFormat.dimensions})
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-muted/50 p-4 rounded-lg text-sm whitespace-pre-wrap font-mono">
+                  {formatOrderedVersion()}
+                </pre>
+              </CardContent>
+            </Card>
+
+            {/* Upgrade 1 Version */}
+            {content.upgradeFormat && (
+              <Card className="border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base text-primary">Upgrade 1</CardTitle>
+                    <CopyButton text={formatUpgradeVersion()} label="Kopier alt" />
+                  </div>
+                  <CardDescription>
+                    {content.upgradeFormat.name} ({content.upgradeFormat.dimensions})
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <pre className="bg-primary/5 p-4 rounded-lg text-sm whitespace-pre-wrap font-mono border border-primary/20">
+                    {formatUpgradeVersion()}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Upgrade 2 Version */}
+            {content.secondUpgradeFormat && (
+              <Card className="border-amber-500/50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base text-amber-600 dark:text-amber-400">Upgrade 2</CardTitle>
+                    <CopyButton text={formatUpgradeVersion()} label="Kopier alt" />
+                  </div>
+                  <CardDescription>
+                    {content.secondUpgradeFormat.name} ({content.secondUpgradeFormat.dimensions})
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <pre className="bg-amber-500/5 p-4 rounded-lg text-sm whitespace-pre-wrap font-mono border border-amber-500/20">
+                    {formatUpgradeVersion()}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+

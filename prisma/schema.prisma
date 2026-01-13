@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  projectId       String   // NOC-nummer
+  companyName     String
+  website         String
+  orderedFormat   String   // visittkort, banner, tredjedel, etc.
+  upgradeFormat   String   // automatisk beregnet
+  industry        String
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  specialNotes    String?
+  status          String   @default("draft") // draft, sent, converted, declined
+  upgradeConverted Boolean @default(false)
+  
+  // Scraped data
+  scrapedServices String?  // JSON array
+  scrapedAddress  String?
+  scrapedPhone    String?
+  scrapedEmail    String?
+  scrapedImages   String?  // JSON array of URLs
+  scrapedColors   String?  // JSON array of hex colors
+  
+  // Generated content
+  heading         String?
+  subheading      String?
+  description     String?
+  serviceList     String?  // JSON array
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model TextTemplate {
+  id        String   @id @default(cuid())
+  industry  String
+  type      String   // heading, subheading, description, service
+  text      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  body      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
