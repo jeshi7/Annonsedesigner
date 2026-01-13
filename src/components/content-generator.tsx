@@ -75,7 +75,14 @@ export function ContentGenerator({
     onContentChange({ services: updated });
   };
 
-  const allServices = SERVICE_LISTS[industry];
+  const allServices = SERVICE_LISTS[industry] || [
+    'Rådgivning',
+    'Prosjektering',
+    'Utførelse',
+    'Service og vedlikehold',
+    'Oppfølging',
+    'Kundetilpassede løsninger',
+  ];
 
   // Format content for copy
   const formatOrderedVersion = () => {
@@ -277,7 +284,13 @@ www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
                 className="text-lg font-semibold bg-background/50"
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                {HEADINGS[industry].slice(0, 5).map((h, i) => (
+                {(HEADINGS[industry] || [
+                  'Kvalitet og erfaring du kan stole på',
+                  'Din lokale samarbeidspartner',
+                  'Fagfolk med lang erfaring',
+                  'Vi leverer resultater',
+                  'Profesjonelle tjenester',
+                ]).slice(0, 5).map((h, i) => (
                   <Badge 
                     key={i} 
                     variant="outline" 
@@ -313,7 +326,11 @@ www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
                 className="bg-background/50 resize-none"
               />
               <div className="mt-3 space-y-2">
-                {SUBHEADINGS[industry].slice(0, 3).map((s, i) => (
+                {(SUBHEADINGS[industry] || [
+                  'Med fokus på kvalitet og kundetilfredshet leverer vi tjenester tilpasset dine behov.',
+                  'Erfarne fagfolk som setter kunden først.',
+                  'Vi tar oppdraget ditt på alvor – hver gang.',
+                ]).slice(0, 3).map((s, i) => (
                   <p 
                     key={i} 
                     className="text-sm text-muted-foreground cursor-pointer hover:text-foreground p-2 rounded hover:bg-muted/50"
