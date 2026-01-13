@@ -216,30 +216,38 @@ export function ContentGenerator({
     
     if (orderedRules?.subheading && content.subheading) {
       lines.push(content.subheading);
+      lines.push(``);
     }
     
-    lines.push(``);
+    // Services - hvis reglene sier det skal være tjenester
+    const serviceCount = orderedRules?.serviceList || 0;
+    if (serviceCount > 0) {
+      lines.push(`TJENESTER:`);
+      selectedServices.slice(0, serviceCount).forEach(s => lines.push(`• ${s}`));
+      lines.push(``);
+    }
     
     // Kontaktinformasjon - alltid inkluder for banner og oppover
     const shouldIncludeContact = isBannerOrLarger(content.orderedFormatKey);
     
-    if (shouldIncludeContact || orderedRules?.contactPhone || orderedRules?.contactAddress || orderedRules?.contactEmail || orderedRules?.website) {
-      if (shouldIncludeContact) {
-        // For banner og oppover, inkluder all tilgjengelig kontaktinfo
-        lines.push(`KONTAKT:`);
-        if (content.phone) lines.push(`📞 ${content.phone}`);
-        if (content.address) lines.push(`📍 ${content.address}`);
-        if (content.email) lines.push(`✉️ ${content.email}`);
-        if (orderedRules?.website || shouldIncludeContact) {
-          lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
-        }
-      } else {
-        // For visittkort, følg reglene
-        if (orderedRules?.website) {
-          lines.push(`www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
-        }
+    if (shouldIncludeContact) {
+      // For banner og oppover, inkluder all tilgjengelig kontaktinfo
+      lines.push(`KONTAKT:`);
+      if (content.phone) lines.push(`📞 ${content.phone}`);
+      if (content.address) lines.push(`📍 ${content.address}`);
+      if (content.email) lines.push(`✉️ ${content.email}`);
+      // Alltid inkluder nettside for banner og oppover
+      lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    } else if (orderedRules?.contactPhone || orderedRules?.contactAddress || orderedRules?.contactEmail || orderedRules?.website) {
+      // For visittkort, følg reglene
+      if (orderedRules?.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
+      if (orderedRules?.contactAddress && content.address) lines.push(`📍 ${content.address}`);
+      if (orderedRules?.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
+      if (orderedRules?.website) {
+        lines.push(`www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
       }
     } else if (orderedRules?.website) {
+      // Fallback: bare nettside hvis ingenting annet
       lines.push(`www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
     }
     
