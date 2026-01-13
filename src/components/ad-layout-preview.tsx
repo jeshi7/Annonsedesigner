@@ -48,10 +48,10 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
     ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade1
     : FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade2;
 
-  // If we don't have the required data, show a placeholder
+  // If we don't have the required data, show a placeholder with debug info
   if (!formatKey || !formatDetails || !rules) {
     return (
-      <Card className="border-2 border-dashed">
+      <Card className="border-2 border-dashed border-orange-500">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Eye className="h-4 w-4" />
@@ -59,8 +59,9 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground text-center py-8">
-            Vent på at innholdet genereres...
+          <div className="text-sm text-muted-foreground text-center py-8 space-y-2">
+            <p>Vent på at innholdet genereres...</p>
+            <p className="text-xs">Debug: formatKey={formatKey ? 'OK' : 'MISSING'}, formatDetails={formatDetails ? 'OK' : 'MISSING'}, rules={rules ? 'OK' : 'MISSING'}</p>
           </div>
         </CardContent>
       </Card>
@@ -90,7 +91,7 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
 
   // Render different layout variants
   const renderLayout = () => {
-    const baseClasses = "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-4 mb-4 min-h-[200px] w-full";
+    const baseClasses = "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-dashed border-slate-400 dark:border-slate-600 rounded-lg p-4 mb-4 min-h-[200px] w-full shadow-sm";
     
     switch (layoutVariant) {
       case 'centered':
@@ -401,11 +402,11 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
   };
 
   return (
-    <Card className="border-2">
+    <Card className="border-2 border-primary/20">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Eye className="h-4 w-4" />
+            <Eye className="h-4 w-4 text-primary" />
             Layout-forslag: {formatDetails.name}
           </CardTitle>
           <Badge variant="outline" className="text-xs">
@@ -413,9 +414,11 @@ export function AdLayoutPreview({ content, companyName, formatType }: AdLayoutPr
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {/* Visual Layout Preview */}
-        {renderLayout()}
+        <div className="w-full">
+          {renderLayout()}
+        </div>
 
         {/* Layout Guidelines */}
         <div className="text-xs text-muted-foreground space-y-1 bg-slate-50 dark:bg-slate-900/50 p-3 rounded">

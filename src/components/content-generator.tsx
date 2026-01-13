@@ -1009,12 +1009,18 @@ export function ContentGenerator({
                 )}
               </div>
             ) : (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Generer innhold først for å se layout-forslag</p>
-                </CardContent>
-              </Card>
+              <div className="space-y-4">
+                <Card className="border-2 border-dashed">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Layout-forslag vil vises her</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-medium mb-2">Generer innhold først for å se layout-forslag</p>
+                    <p className="text-xs">Gå til "Innhold"-fanen og klikk "Generer innhold"</p>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </TabsContent>
