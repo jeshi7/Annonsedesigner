@@ -591,10 +591,14 @@ export function ContentGenerator({
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-12">
+        <TabsList className="grid w-full grid-cols-5 h-12">
           <TabsTrigger value="innhold" className="gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Innhold</span>
+          </TabsTrigger>
+          <TabsTrigger value="layout" className="gap-2">
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Layout</span>
           </TabsTrigger>
           <TabsTrigger value="bilder" className="gap-2">
             <ImageIcon className="h-4 w-4" />
@@ -970,17 +974,18 @@ export function ContentGenerator({
           )}
         </TabsContent>
 
-        {/* Eksport Tab */}
-        <TabsContent value="eksport" className="space-y-6">
-          {/* Visual Layout Previews */}
+        {/* Layout Tab */}
+        <TabsContent value="layout" className="space-y-6">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Visuell layout-forslag
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Disse viser hvordan annonsene skal se ut visuelt. Layouten endres automatisk når du genererer nytt innhold.
-            </p>
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                <Eye className="h-5 w-5" />
+                Visuell layout-forslag
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Disse viser hvordan annonsene skal se ut visuelt. Layouten endres automatisk når du genererer nytt innhold.
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <AdLayoutPreview 
                 content={content} 
@@ -1003,9 +1008,10 @@ export function ContentGenerator({
               )}
             </div>
           </div>
+        </TabsContent>
 
-          <Separator />
-
+        {/* Eksport Tab */}
+        <TabsContent value="eksport" className="space-y-6">
           {/* Text Export */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Tekst for kopiering</h3>
