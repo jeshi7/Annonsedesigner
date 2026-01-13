@@ -40,16 +40,19 @@ export interface GeneratedContent {
   scrapedData: ScrapedData;
   emailDraft: string;
   emailDraftSecondUpgrade: string;
+  orderedFormatKey: string; // Format key (visittkort, banner, etc.)
   orderedFormat: {
     name: string;
     dimensions: string;
     price: number;
   };
+  upgradeFormatKey: string | null; // Format key for upgrade 1
   upgradeFormat: {
     name: string;
     dimensions: string;
     price: number;
   } | null;
+  secondUpgradeFormatKey: string | null; // Format key for upgrade 2
   secondUpgradeFormat: {
     name: string;
     dimensions: string;
@@ -200,16 +203,19 @@ export async function generateContent(
     scrapedData,
     emailDraft,
     emailDraftSecondUpgrade,
+    orderedFormatKey: orderedFormat,
     orderedFormat: {
       name: orderedDetails?.label || orderedFormat,
       dimensions: orderedDetails?.dimensions || '',
       price: orderedDetails?.price || 0,
     },
+    upgradeFormatKey: upgradeFormatKey,
     upgradeFormat: upgradeDetails ? {
       name: upgradeDetails.label,
       dimensions: upgradeDetails.dimensions,
       price: upgradeDetails.price,
     } : null,
+    secondUpgradeFormatKey: secondUpgradeFormatKey,
     secondUpgradeFormat: secondUpgradeDetails ? {
       name: secondUpgradeDetails.label,
       dimensions: secondUpgradeDetails.dimensions,

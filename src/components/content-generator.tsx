@@ -17,6 +17,7 @@ import {
   getRandomHeading,
   getRandomSubheading,
   getRandomServices,
+  FORMAT_CONTENT_RULES,
 } from '@/lib/text-library';
 import type { GeneratedContent } from '@/lib/actions';
 import { 
@@ -84,42 +85,129 @@ export function ContentGenerator({
     'Kundetilpassede løsninger',
   ];
 
-  // Format content for copy
+  // Get content rules for each format level
+  const orderedRules = content.orderedFormatKey ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.ordered : null;
+  const upgrade1Rules = content.upgradeFormatKey ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade1 : null;
+  const upgrade2Rules = content.secondUpgradeFormatKey ? FORMAT_CONTENT_RULES[content.orderedFormatKey]?.upgrade2 : null;
+
+  // Format content for copy - Bestilt versjon (minimalt)
   const formatOrderedVersion = () => {
-    return `[LOGO]
-
-${content.heading}
-
-${content.orderedFormat.name} (${content.orderedFormat.dimensions})
-
-www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
+    const lines = [`[LOGO]`, ``];
+    
+    if (orderedRules?.heading) {
+      lines.push(content.heading);
+    }
+    
+    if (orderedRules?.subheading && content.subheading) {
+      lines.push(content.subheading);
+    }
+    
+    lines.push(``);
+    
+    if (orderedRules?.website) {
+      lines.push(`www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    }
+    
+    return lines.join('\n');
   };
 
-  const formatUpgradeVersion = () => {
-    const lines = [
-      `[LOGO]`,
-      ``,
-      content.heading,
-      content.subheading,
-      ``,
-      content.description,
-      ``,
-      `TJENESTER:`,
-      ...selectedServices.map(s => `• ${s}`),
-      ``,
-      `KONTAKT:`,
-    ];
-
-    if (content.phone) lines.push(`📞 ${content.phone}`);
-    if (content.address) lines.push(`📍 ${content.address}`);
-    if (content.email) lines.push(`✉️ ${content.email}`);
-    lines.push(`🌐 ${content.scrapedData.companyName ? `www.${companyName.toLowerCase().replace(/\s+/g, '')}.no` : 'www.nettside.no'}`);
-
-    if (content.certifications.length > 0) {
-      lines.push(``, `SERTIFISERINGER:`);
-      content.certifications.forEach(c => lines.push(`[${c}]`));
+  // Format Upgrade 1 (moderat innhold)
+  const formatUpgrade1Version = () => {
+    const rules = upgrade1Rules;
+    if (!rules) return formatOrderedVersion();
+    
+    const lines = [`[LOGO]`, ``];
+    
+    if (rules.heading) lines.push(content.heading);
+    if (rules.subheading && content.subheading) {
+      lines.push(content.subheading);
+      lines.push(``);
     }
+    
+    if (rules.description && content.description) {
+      lines.push(content.description);
+      lines.push(``);
+    }
+    
+    // Services - bruk riktig antall basert på upgrade1 rules
+    const serviceCount = rules.serviceList || 0;
+    if (serviceCount > 0) {
+      lines.push(`TJENESTER:`);
+      selectedServices.slice(0, serviceCount).forEach(s => lines.push(`• ${s}`));
+      lines.push(``);
+    }
+    
+    lines.push(`KONTAKT:`);
+    if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
+    if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
+    if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
+    if (rules.website) {
+      lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    }
+    
+    // Certifications
+    const certCount = rules.certifications || 0;
+    if (certCount > 0 && content.certifications.length > 0) {
+      lines.push(``, `SERTIFISERINGER:`);
+      content.certifications.slice(0, certCount).forEach(c => lines.push(`[${c}]`));
+    }
+    
+    return lines.join('\n');
+  };
 
+  // Format Upgrade 2 (komplett innhold - 2-3x mer enn Upgrade 1)
+  const formatUpgrade2Version = () => {
+    const rules = upgrade2Rules;
+    if (!rules) return formatUpgrade1Version();
+    
+    const lines = [`[LOGO]`, ``];
+    
+    if (rules.heading) lines.push(content.heading);
+    if (rules.subheading && content.subheading) {
+      lines.push(content.subheading);
+      lines.push(``);
+    }
+    
+    if (rules.description && content.description) {
+      lines.push(content.description);
+      lines.push(``);
+    }
+    
+    // Services - bruk riktig antall basert på upgrade2 rules (mer enn upgrade1)
+    const serviceCount = rules.serviceList || 0;
+    if (serviceCount > 0) {
+      lines.push(`TJENESTER:`);
+      selectedServices.slice(0, serviceCount).forEach(s => lines.push(`• ${s}`));
+      lines.push(``);
+    }
+    
+    lines.push(`KONTAKT:`);
+    if (rules.contactPhone && content.phone) lines.push(`📞 ${content.phone}`);
+    if (rules.contactAddress && content.address) lines.push(`📍 ${content.address}`);
+    if (rules.contactEmail && content.email) lines.push(`✉️ ${content.email}`);
+    if (rules.openingHours) {
+      // Legg til åpningstider hvis tilgjengelig
+    }
+    if (rules.website) {
+      lines.push(`🌐 www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`);
+    }
+    
+    // Certifications - flere enn upgrade1
+    const certCount = rules.certifications || 0;
+    if (certCount > 0 && content.certifications.length > 0) {
+      lines.push(``, `SERTIFISERINGER:`);
+      content.certifications.slice(0, certCount).forEach(c => lines.push(`[${c}]`));
+    }
+    
+    // Images - hvis tillatt
+    const imageCount = rules.images || 0;
+    if (imageCount > 0 && content.images.length > 0) {
+      lines.push(``, `BILDER:`);
+      content.images.slice(0, imageCount).forEach((img, i) => {
+        lines.push(`[Bilde ${i + 1}]`);
+      });
+    }
+    
     return lines.join('\n');
   };
 
@@ -603,7 +691,7 @@ www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base text-primary">Upgrade 1</CardTitle>
-                    <CopyButton text={formatUpgradeVersion()} label="Kopier alt" />
+                    <CopyButton text={formatUpgrade1Version()} label="Kopier alt" />
                   </div>
                   <CardDescription>
                     {content.upgradeFormat.name} ({content.upgradeFormat.dimensions})
@@ -611,7 +699,7 @@ www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-primary/5 p-4 rounded-lg text-sm whitespace-pre-wrap font-mono border border-primary/20">
-                    {formatUpgradeVersion()}
+                    {formatUpgrade1Version()}
                   </pre>
                 </CardContent>
               </Card>
@@ -623,7 +711,7 @@ www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base text-amber-600 dark:text-amber-400">Upgrade 2</CardTitle>
-                    <CopyButton text={formatUpgradeVersion()} label="Kopier alt" />
+                    <CopyButton text={formatUpgrade2Version()} label="Kopier alt" />
                   </div>
                   <CardDescription>
                     {content.secondUpgradeFormat.name} ({content.secondUpgradeFormat.dimensions})
@@ -631,7 +719,7 @@ www.${companyName.toLowerCase().replace(/\s+/g, '')}.no`;
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-amber-500/5 p-4 rounded-lg text-sm whitespace-pre-wrap font-mono border border-amber-500/20">
-                    {formatUpgradeVersion()}
+                    {formatUpgrade2Version()}
                   </pre>
                 </CardContent>
               </Card>
