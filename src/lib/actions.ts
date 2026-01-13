@@ -259,14 +259,21 @@ export async function generateContent(
     console.log('Using fallback description');
   }
 
+  // Log scraped contact info for debugging
+  console.log('Scraped contact info:', {
+    phone: scrapedData.phone,
+    email: scrapedData.email,
+    address: scrapedData.address,
+  });
+
   return {
     heading,
     subheading,
     description,
     services,
-    phone: scrapedData.phone,
-    email: scrapedData.email,
-    address: scrapedData.address,
+    phone: scrapedData.phone || null,
+    email: scrapedData.email || null,
+    address: scrapedData.address || null,
     images: scrapedData.images,
     certifications: scrapedData.certifications,
     scrapedData,

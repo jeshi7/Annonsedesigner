@@ -244,51 +244,125 @@ function extractServices($: cheerio.CheerioAPI): string[] {
 function extractPhone($: cheerio.CheerioAPI, html: string): string | null {
   const phoneRegex = /(?:\+47\s?)?(?:\d{2}\s?\d{2}\s?\d{2}\s?\d{2}|\d{3}\s?\d{2}\s?\d{3}|\d{8})/g;
   
+  // Først: sjekk tel: links
   const telLink = $('a[href^="tel:"]').first().attr('href');
-  if (telLink) return telLink.replace('tel:', '').trim();
+  if (telLink) {
+    const phone = telLink.replace('tel:', '').trim();
+    if (phone) return phone;
+  }
 
-  const contactText = $('.contact, .kontakt, footer, #contact, #kontakt').text();
-  const phoneMatch = contactText.match(phoneRegex);
-  if (phoneMatch) return phoneMatch[0];
-
-  const allMatches = html.match(phoneRegex);
-  if (allMatches) {
-    for (const match of allMatches) {
-      const cleaned = match.replace(/\s/g, '');
-      if (cleaned.length >= 8) return match;
+  // Sjekk kontakt-seksjoner (utvidet)
+  const contactSelectors = [
+    '.contact', '.kontakt', 'footer', '#contact', '#kontakt',
+    '[class*="contact"]', '[class*="kontakt"]', '[id*="contact"]', '[id*="kontakt"]',
+    'address', '.address', '.adresse', '.footer-contact', '.contact-info'
+  ];
+  
+  for (const selector of contactSelectors) {
+    const contactText = $(selector).text();
+    const phoneMatch = contactText.match(phoneRegex);
+    if (phoneMatch && phoneMatch[0]) {
+      return phoneMatch[0].trim();
     }
   }
+
+  // Sjekk hele HTML-en, men prioriter lengre numre (8+ siffer)
+  const allMatches = html.match(phoneRegex);
+  if (allMatches) {
+    // Sorter etter lengde (lengre = mer sannsynlig å være riktig)
+    const sortedMatches = allMatches
+      .map(m => m.trim())
+      .filter(m => {
+        const cleaned = m.replace(/\s/g, '');
+        return cleaned.length >= 8;
+      })
+      .sort((a, b) => b.replace(/\s/g, '').length - a.replace(/\s/g, '').length);
+    
+    if (sortedMatches.length > 0) {
+      return sortedMatches[0];
+    }
+  }
+  
   return null;
 }
 
 function extractEmail($: cheerio.CheerioAPI, html: string): string | null {
+  // Først: sjekk mailto: links
   const mailtoLink = $('a[href^="mailto:"]').first().attr('href');
-  if (mailtoLink) return mailtoLink.replace('mailto:', '').split('?')[0].trim();
+  if (mailtoLink) {
+    const email = mailtoLink.replace('mailto:', '').split('?')[0].trim();
+    if (email) return email;
+  }
 
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-  const contactText = $('.contact, .kontakt, footer').text();
-  const emailMatch = contactText.match(emailRegex);
-  if (emailMatch) return emailMatch[0];
-
-  const allMatches = html.match(emailRegex);
-  if (allMatches) {
-    for (const match of allMatches) {
-      if (!match.includes('example') && !match.includes('wordpress')) {
-        return match;
+  
+  // Sjekk kontakt-seksjoner (utvidet)
+  const contactSelectors = [
+    '.contact', '.kontakt', 'footer', '#contact', '#kontakt',
+    '[class*="contact"]', '[class*="kontakt"]', '[id*="contact"]', '[id*="kontakt"]',
+    'address', '.address', '.adresse', '.footer-contact', '.contact-info',
+    '[itemprop="email"]', '[type="email"]'
+  ];
+  
+  for (const selector of contactSelectors) {
+    const contactText = $(selector).text();
+    const emailMatch = contactText.match(emailRegex);
+    if (emailMatch && emailMatch[0]) {
+      const email = emailMatch[0].trim();
+      if (!email.includes('example') && !email.includes('wordpress') && !email.includes('noreply')) {
+        return email;
       }
     }
   }
+
+  // Sjekk hele HTML-en, men filtrer ut generiske e-poster
+  const allMatches = html.match(emailRegex);
+  if (allMatches) {
+    for (const match of allMatches) {
+      const email = match.trim();
+      if (!email.includes('example') && 
+          !email.includes('wordpress') && 
+          !email.includes('noreply') &&
+          !email.includes('no-reply') &&
+          !email.includes('donotreply')) {
+        return email;
+      }
+    }
+  }
+  
   return null;
 }
 
 function extractAddress($: cheerio.CheerioAPI): string | null {
-  const selectors = ['.address', '.adresse', '[itemprop="address"]', 'footer address'];
+  const selectors = [
+    '.address', '.adresse', '[itemprop="address"]', 'footer address',
+    '[class*="address"]', '[class*="adresse"]', '[id*="address"]', '[id*="adresse"]',
+    '.contact-address', '.kontakt-adresse', '.location', '.lokasjon',
+    'address', '.footer-address', '.company-address'
+  ];
+  
   for (const selector of selectors) {
     const text = $(selector).first().text().trim();
     if (text && text.length > 5 && text.length < 200) {
-      return text.replace(/\s+/g, ' ');
+      // Filtrer ut generisk tekst
+      const lowerText = text.toLowerCase();
+      if (!lowerText.includes('cookie') && 
+          !lowerText.includes('personvern') && 
+          !lowerText.includes('copyright') &&
+          !lowerText.includes('all rights reserved')) {
+        return text.replace(/\s+/g, ' ').trim();
+      }
     }
   }
+  
+  // Sjekk også i footer for adresse-lignende tekst (gateadresse + postnummer)
+  const footerText = $('footer').text();
+  const addressPattern = /([A-ZÆØÅ][a-zæøå]+(?:\s+[A-ZÆØÅ][a-zæøå]+)*\s+\d+[A-Z]?)\s*(\d{4}\s+[A-ZÆØÅ][a-zæøå]+)/i;
+  const addressMatch = footerText.match(addressPattern);
+  if (addressMatch) {
+    return addressMatch[0].trim();
+  }
+  
   return null;
 }
 
