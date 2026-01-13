@@ -1,6 +1,5 @@
 'use server';
 
-import { getPrisma } from './prisma';
 import { scrapeWebsite, ScrapedData } from './scraper';
 import {
   getUpgradeFormat,
@@ -59,28 +58,6 @@ export interface GeneratedContent {
   priceDifference: number;
   priceDifferenceSecond: number;
   personalComment: string;
-}
-
-export async function createProject(data: ProjectFormData) {
-  const prisma = await getPrisma();
-  const upgradeFormat = getUpgradeFormat(data.orderedFormat);
-  
-  const project = await prisma.project.create({
-    data: {
-      projectId: data.projectId,
-      companyName: data.companyName,
-      website: data.website,
-      orderedFormat: data.orderedFormat,
-      upgradeFormat: upgradeFormat || data.orderedFormat,
-      industry: data.industry,
-      contactName: data.contactName,
-      contactEmail: data.contactEmail,
-      contactPhone: data.contactPhone,
-      specialNotes: data.specialNotes,
-    },
-  });
-
-  return project;
 }
 
 export async function generateContent(
@@ -271,68 +248,5 @@ function generateEmailDraft(params: EmailDraftParams): string {
   return email;
 }
 
-export async function saveGeneratedContent(
-  projectId: string,
-  content: {
-    heading: string;
-    subheading: string;
-    description: string;
-    services: string[];
-  }
-) {
-  const prisma = await getPrisma();
-  return await prisma.project.update({
-    where: { id: projectId },
-    data: {
-      heading: content.heading,
-      subheading: content.subheading,
-      description: content.description,
-      serviceList: JSON.stringify(content.services),
-    },
-  });
-}
-
-export async function updateProjectStatus(
-  projectId: string,
-  status: string,
-  upgradeConverted?: boolean
-) {
-  const prisma = await getPrisma();
-  return await prisma.project.update({
-    where: { id: projectId },
-    data: {
-      status,
-      ...(upgradeConverted !== undefined && { upgradeConverted }),
-    },
-  });
-}
-
-export async function getProjects() {
-  const prisma = await getPrisma();
-  return await prisma.project.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-  });
-}
-
-export async function getProjectStats() {
-  const prisma = await getPrisma();
-  const total = await prisma.project.count();
-  const converted = await prisma.project.count({
-    where: { upgradeConverted: true },
-  });
-  const thisMonth = await prisma.project.count({
-    where: {
-      createdAt: {
-        gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-      },
-    },
-  });
-  
-  return {
-    total,
-    converted,
-    conversionRate: total > 0 ? Math.round((converted / total) * 100) : 0,
-    thisMonth,
-  };
-}
+// Database functions removed for Vercel compatibility
+// All content generation is now stateless
