@@ -103,7 +103,8 @@ export type IndustryKey = typeof INDUSTRIES[number]['value'];
 // HEADINGS PER BRANSJE
 // ============================================
 
-export const HEADINGS: Record<IndustryKey, string[]> = {
+// Partial - ikke alle bransjer trenger egne headings, bruker fallback til 'annet'
+export const HEADINGS: Partial<Record<IndustryKey, string[]>> = {
   bygg_anlegg: [
     'Fra fundament til ferdig bygg',
     'Solid håndverk – lokale røtter',
@@ -302,7 +303,7 @@ export const HEADINGS: Record<IndustryKey, string[]> = {
 // SUBHEADINGS PER BRANSJE
 // ============================================
 
-export const SUBHEADINGS: Record<IndustryKey, string[]> = {
+export const SUBHEADINGS: Partial<Record<IndustryKey, string[]>> = {
   bygg_anlegg: [
     'Vi utfører alt fra grunnarbeid til ferdigstillelse – med fokus på kvalitet og tidsfrist.',
     'Totalentreprenør med {ANTALL} års erfaring i {STED}-regionen.',
@@ -405,7 +406,7 @@ export const SUBHEADINGS: Record<IndustryKey, string[]> = {
 // TJENESTELISTER PER BRANSJE
 // ============================================
 
-export const SERVICE_LISTS: Record<IndustryKey, string[]> = {
+export const SERVICE_LISTS: Partial<Record<IndustryKey, string[]>> = {
   bygg_anlegg: [
     'Nybygg',
     'Rehabilitering',
@@ -977,7 +978,7 @@ Begge annonsene er vedlagt så det er bare å komme tilbake til meg om hvilken a
 
 Ønsker deg en god dag 😊`;
 
-export const PERSONAL_COMMENTS: Record<IndustryKey, string[]> = {
+export const PERSONAL_COMMENTS: Partial<Record<IndustryKey, string[]>> = {
   bygg_anlegg: [
     'Imponerende prosjekter dere har gjennomført! Det var gøy å få frem bredden i tjenestene deres.',
     'Flotte bilder fra byggeplassene deres – det skinner gjennom i annonsen.',
@@ -1080,35 +1081,54 @@ export function getFormatDetails(format: string) {
 }
 
 // Fallback til 'annet' hvis bransjen ikke har spesifikt innhold
-function getIndustryWithFallback(industry: string): keyof typeof HEADINGS {
-  if (industry in HEADINGS) {
-    return industry as keyof typeof HEADINGS;
-  }
-  return 'annet';
-}
+// Fallback til 'annet' for bransjer uten spesifikke tekster
+const DEFAULT_HEADINGS = [
+  'Kvalitet og erfaring du kan stole på',
+  'Din lokale samarbeidspartner',
+  'Fagfolk med lang erfaring',
+  'Vi leverer resultater',
+  'Profesjonelle tjenester',
+];
+
+const DEFAULT_SUBHEADINGS = [
+  'Med fokus på kvalitet og kundetilfredshet leverer vi tjenester tilpasset dine behov.',
+  'Erfarne fagfolk som setter kunden først.',
+  'Vi tar oppdraget ditt på alvor – hver gang.',
+];
+
+const DEFAULT_SERVICES = [
+  'Rådgivning',
+  'Prosjektering', 
+  'Utførelse',
+  'Service og vedlikehold',
+  'Oppfølging',
+  'Kundetilpassede løsninger',
+];
+
+const DEFAULT_COMMENTS = [
+  'Dere hadde godt materiell på nettsiden!',
+  'Fin presentasjon av tjenestene deres.',
+  'Bra oversikt over det dere tilbyr.',
+];
 
 export function getRandomHeading(industry: IndustryKey | string): string {
-  const key = getIndustryWithFallback(industry);
-  const headings = HEADINGS[key];
+  const headings = HEADINGS[industry as IndustryKey] || DEFAULT_HEADINGS;
   return headings[Math.floor(Math.random() * headings.length)];
 }
 
 export function getRandomSubheading(industry: IndustryKey | string): string {
-  const key = getIndustryWithFallback(industry);
-  const subheadings = SUBHEADINGS[key];
+  const subheadings = SUBHEADINGS[industry as IndustryKey] || DEFAULT_SUBHEADINGS;
   return subheadings[Math.floor(Math.random() * subheadings.length)];
 }
 
 export function getRandomServices(industry: IndustryKey | string, count: number): string[] {
-  const key = getIndustryWithFallback(industry);
-  const services = [...SERVICE_LISTS[key]];
+  const services = [...(SERVICE_LISTS[industry as IndustryKey] || DEFAULT_SERVICES)];
   const shuffled = services.sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 }
 
 export function getRandomPersonalComment(industry: IndustryKey | string): string {
-  const key = getIndustryWithFallback(industry);
-  const comments = PERSONAL_COMMENTS[key];
+  const comments = PERSONAL_COMMENTS[industry as IndustryKey] || DEFAULT_COMMENTS;
   return comments[Math.floor(Math.random() * comments.length)];
 }
 
