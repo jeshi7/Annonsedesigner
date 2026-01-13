@@ -973,7 +973,6 @@ export function ContentGenerator({
             </Card>
           )}
 
-          {/* Email for Upgrade 2 */}
           {content.secondUpgradeFormat && content.emailDraftSecondUpgrade && (
             <Card className="border-amber-500/50">
               <CardHeader>
