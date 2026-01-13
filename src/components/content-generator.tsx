@@ -1035,6 +1035,7 @@ export function ContentGenerator({
               </Card>
             )}
           </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
