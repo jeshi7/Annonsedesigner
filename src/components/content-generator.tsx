@@ -85,8 +85,14 @@ export function ContentGenerator({
     onContentChange({ services: updated });
   };
 
-  // Funksjon for å foreslå ikoner (som tekst) basert på tjenester og innhold
+  // Funksjon for å foreslå ikoner (som tekst) - bruk LLM-genererte hvis tilgjengelig
   const getSuggestedIcons = (): string[] => {
+    // Use LLM-generated icon suggestions if available (better quality)
+    if (content.iconSuggestions && content.iconSuggestions.length > 0) {
+      return content.iconSuggestions;
+    }
+    
+    // Fallback to text-based suggestions
     const iconMap: Record<string, string[]> = {
       // Bygg og anlegg
       'bygg': ['bygg', 'hammer', 'hus', 'verktøy'],

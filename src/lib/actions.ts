@@ -10,10 +10,13 @@ import {
   FORMAT_CONTENT_RULES,
 } from './text-library';
 import {
+  generateHeadingAndSubheadingBatch,
   generateHeadingWithLLM,
   generateSubheadingWithLLM,
   generateDescriptionWithLLM,
   generateServiceDescriptionsWithLLM,
+  generateEmailPitchWithLLM,
+  generateIconSuggestionsWithLLM,
   isLLMAvailable,
 } from './llm-service';
 
@@ -39,6 +42,7 @@ export interface GeneratedContent {
   address: string | null;
   images: string[];
   certifications: string[];
+  iconSuggestions: string[]; // LLM-generated icon suggestions
   scrapedData: ScrapedData;
   emailDraft: string;
   emailDraftOrdered: string; // E-post for bestilt versjon (hvis kunden ikke vil ha upgrade)
@@ -164,16 +168,16 @@ export async function generateContent(
   const secondUpgradeFormatKey = getSecondUpgradeFormat(orderedFormat);
   console.log('Upgrade format:', upgradeFormatKey, 'Second upgrade:', secondUpgradeFormatKey);
   
-  // Generate heading and subheading - TRY LLM FIRST, then website, then library
+  // Generate heading and subheading - USE BATCHED LLM (1 API call instead of 2)
   let heading: string;
   let subheading: string;
   
   const companyName = scrapedData.companyName || 'Selskapet';
   
-  // Try LLM first for heading
+  // Try batched LLM generation first (cost optimization - 1 call instead of 2)
   if (await isLLMAvailable()) {
-    console.log('Attempting to generate heading with LLM...');
-    const llmHeading = await generateHeadingWithLLM({
+    console.log('Attempting batched LLM generation for heading + subheading...');
+    const batchResult = await generateHeadingAndSubheadingBatch({
       companyName,
       scrapedContent: {
         description: scrapedData.description,
@@ -182,20 +186,32 @@ export async function generateContent(
         potentialHeadings: scrapedData.potentialHeadings,
         potentialSubheadings: scrapedData.potentialSubheadings,
       },
-      previousContent: previousContent ? { heading: previousContent.heading } : undefined,
-    });
+      previousContent: previousContent ? { 
+        heading: previousContent.heading,
+        subheading: previousContent.subheading 
+      } : undefined,
+    }, website);
     
-    if (llmHeading) {
-      heading = llmHeading;
-      console.log('Using LLM-generated heading:', heading);
+    if (batchResult.heading && batchResult.subheading) {
+      heading = batchResult.heading;
+      subheading = batchResult.subheading;
+      console.log('Using batched LLM-generated heading + subheading');
     } else {
-      // Fallback to website
+      // Fallback to individual calls or website
       if (scrapedData.potentialHeadings && scrapedData.potentialHeadings.length > 0) {
         heading = scrapedData.potentialHeadings[Math.floor(Math.random() * scrapedData.potentialHeadings.length)];
-        console.log('LLM failed, using heading from website:', heading);
+        console.log('Batched LLM failed, using heading from website:', heading);
       } else {
         heading = `${companyName} – Din pålitelige partner`;
         console.log('Using fallback heading');
+      }
+      
+      if (scrapedData.potentialSubheadings && scrapedData.potentialSubheadings.length > 0) {
+        subheading = scrapedData.potentialSubheadings[Math.floor(Math.random() * scrapedData.potentialSubheadings.length)];
+        console.log('Batched LLM failed, using subheading from website:', subheading);
+      } else {
+        subheading = 'Profesjonelle løsninger tilpasset dine behov';
+        console.log('Using fallback subheading');
       }
     }
   } else {
@@ -207,38 +223,7 @@ export async function generateContent(
       heading = `${companyName} – Din pålitelige partner`;
       console.log('Using fallback heading');
     }
-  }
-  
-  // Try LLM first for subheading
-  if (await isLLMAvailable()) {
-    console.log('Attempting to generate subheading with LLM...');
-    const llmSubheading = await generateSubheadingWithLLM({
-      companyName,
-      scrapedContent: {
-        description: scrapedData.description,
-        services: scrapedData.services,
-        allPageContent: scrapedData.allPageContent,
-        potentialHeadings: scrapedData.potentialHeadings,
-        potentialSubheadings: scrapedData.potentialSubheadings,
-      },
-      previousContent: previousContent ? { subheading: previousContent.subheading } : undefined,
-    });
     
-    if (llmSubheading) {
-      subheading = llmSubheading;
-      console.log('Using LLM-generated subheading:', subheading);
-    } else {
-      // Fallback to website
-      if (scrapedData.potentialSubheadings && scrapedData.potentialSubheadings.length > 0) {
-        subheading = scrapedData.potentialSubheadings[Math.floor(Math.random() * scrapedData.potentialSubheadings.length)];
-        console.log('LLM failed, using subheading from website:', subheading);
-      } else {
-        subheading = 'Profesjonelle løsninger tilpasset dine behov';
-        console.log('Using fallback subheading');
-      }
-    }
-  } else {
-    // No LLM available, use website first
     if (scrapedData.potentialSubheadings && scrapedData.potentialSubheadings.length > 0) {
       subheading = scrapedData.potentialSubheadings[Math.floor(Math.random() * scrapedData.potentialSubheadings.length)];
       console.log('Using subheading from website:', subheading);
@@ -301,6 +286,21 @@ export async function generateContent(
   }
   console.log('Final services count:', services.length);
   
+  // Generate icon suggestions with LLM (better than text-based)
+  let iconSuggestions: string[] = [];
+  if (await isLLMAvailable() && services.length > 0) {
+    console.log('Generating icon suggestions with LLM...');
+    iconSuggestions = await generateIconSuggestionsWithLLM({
+      companyName,
+      services,
+      scrapedContent: {
+        description: scrapedData.description,
+        allPageContent: scrapedData.allPageContent,
+      },
+    });
+    console.log('Icon suggestions generated:', iconSuggestions.length);
+  }
+  
   // Get format details for all three levels
   const orderedDetails = getFormatDetails(orderedFormat);
   const upgradeDetails = upgradeFormatKey ? getFormatDetails(upgradeFormatKey) : null;
@@ -336,28 +336,87 @@ export async function generateContent(
     console.log('Using personal comment from library');
   }
   
-  // Generate email draft for ordered version (if customer doesn't want upgrade)
-  const emailDraftOrdered = generateEmailDraftOrdered({
-    contactName: contactName || 'der',
-    orderedFormat: orderedDetails?.label || orderedFormat,
-    orderedDimensions: orderedDetails?.dimensions || '',
-    personalComment,
-  });
+  // Generate email drafts - try LLM first for better personalization, fallback to templates
+  let emailDraftOrdered: string;
+  let emailDraft: string;
+  let emailDraftSecondUpgrade: string = '';
 
-  // Generate email drafts for both upgrade levels
-  const emailDraft = generateEmailDraft({
-    contactName: contactName || 'der',
-    orderedFormat: orderedDetails?.label || orderedFormat,
-    orderedDimensions: orderedDetails?.dimensions || '',
-    upgradeFormat: upgradeDetails?.label || '',
-    upgradeDimensions: upgradeDetails?.dimensions || '',
-    priceDifference,
-    personalComment,
-  });
+  if (await isLLMAvailable()) {
+    console.log('Generating emails with LLM for better personalization...');
+    
+    // Try LLM for ordered version
+    const llmEmailOrdered = await generateEmailPitchWithLLM({
+      companyName,
+      contactName: contactName || 'der',
+      orderedFormat: orderedDetails?.label || orderedFormat,
+      orderedDimensions: orderedDetails?.dimensions || '',
+      scrapedContent: {
+        description: scrapedData.description,
+        services: scrapedData.services,
+        allPageContent: scrapedData.allPageContent,
+      },
+    });
+    emailDraftOrdered = llmEmailOrdered || generateEmailDraftOrdered({
+      contactName: contactName || 'der',
+      orderedFormat: orderedDetails?.label || orderedFormat,
+      orderedDimensions: orderedDetails?.dimensions || '',
+      personalComment,
+    });
 
-  // Generate email draft for second upgrade (if available)
-  const emailDraftSecondUpgrade = secondUpgradeDetails
-    ? generateEmailDraft({
+    // Try LLM for upgrade 1
+    if (upgradeDetails) {
+      const llmEmailUpgrade1 = await generateEmailPitchWithLLM({
+        companyName,
+        contactName: contactName || 'der',
+        orderedFormat: orderedDetails?.label || orderedFormat,
+        orderedDimensions: orderedDetails?.dimensions || '',
+        upgradeFormat: upgradeDetails.label,
+        upgradeDimensions: upgradeDetails.dimensions,
+        priceDifference,
+        scrapedContent: {
+          description: scrapedData.description,
+          services: scrapedData.services,
+          allPageContent: scrapedData.allPageContent,
+        },
+      });
+      emailDraft = llmEmailUpgrade1 || generateEmailDraft({
+        contactName: contactName || 'der',
+        orderedFormat: orderedDetails?.label || orderedFormat,
+        orderedDimensions: orderedDetails?.dimensions || '',
+        upgradeFormat: upgradeDetails.label,
+        upgradeDimensions: upgradeDetails.dimensions,
+        priceDifference,
+        personalComment,
+      });
+    } else {
+      emailDraft = generateEmailDraft({
+        contactName: contactName || 'der',
+        orderedFormat: orderedDetails?.label || orderedFormat,
+        orderedDimensions: orderedDetails?.dimensions || '',
+        upgradeFormat: '',
+        upgradeDimensions: '',
+        priceDifference: 0,
+        personalComment,
+      });
+    }
+
+    // Try LLM for upgrade 2
+    if (secondUpgradeDetails) {
+      const llmEmailUpgrade2 = await generateEmailPitchWithLLM({
+        companyName,
+        contactName: contactName || 'der',
+        orderedFormat: orderedDetails?.label || orderedFormat,
+        orderedDimensions: orderedDetails?.dimensions || '',
+        upgradeFormat: secondUpgradeDetails.label,
+        upgradeDimensions: secondUpgradeDetails.dimensions,
+        priceDifference: priceDifferenceSecond,
+        scrapedContent: {
+          description: scrapedData.description,
+          services: scrapedData.services,
+          allPageContent: scrapedData.allPageContent,
+        },
+      });
+      emailDraftSecondUpgrade = llmEmailUpgrade2 || generateEmailDraft({
         contactName: contactName || 'der',
         orderedFormat: orderedDetails?.label || orderedFormat,
         orderedDimensions: orderedDetails?.dimensions || '',
@@ -365,8 +424,39 @@ export async function generateContent(
         upgradeDimensions: secondUpgradeDetails.dimensions,
         priceDifference: priceDifferenceSecond,
         personalComment,
-      })
-    : '';
+      });
+    }
+  } else {
+    // Fallback to templates if LLM not available
+    emailDraftOrdered = generateEmailDraftOrdered({
+      contactName: contactName || 'der',
+      orderedFormat: orderedDetails?.label || orderedFormat,
+      orderedDimensions: orderedDetails?.dimensions || '',
+      personalComment,
+    });
+
+    emailDraft = generateEmailDraft({
+      contactName: contactName || 'der',
+      orderedFormat: orderedDetails?.label || orderedFormat,
+      orderedDimensions: orderedDetails?.dimensions || '',
+      upgradeFormat: upgradeDetails?.label || '',
+      upgradeDimensions: upgradeDetails?.dimensions || '',
+      priceDifference,
+      personalComment,
+    });
+
+    emailDraftSecondUpgrade = secondUpgradeDetails
+      ? generateEmailDraft({
+          contactName: contactName || 'der',
+          orderedFormat: orderedDetails?.label || orderedFormat,
+          orderedDimensions: orderedDetails?.dimensions || '',
+          upgradeFormat: secondUpgradeDetails.label,
+          upgradeDimensions: secondUpgradeDetails.dimensions,
+          priceDifference: priceDifferenceSecond,
+          personalComment,
+        })
+      : '';
+  }
 
   // Use scraped description - TRY LLM FIRST, then prioritize from website, generate from content if needed
   let description: string;
@@ -374,7 +464,7 @@ export async function generateContent(
   // Determine max description length based on format (upgrade2 gets more space)
   const maxDescLength = upgrade2Rules?.description ? 300 : upgrade1Rules?.description ? 200 : 150;
   
-  // Try LLM first if available
+  // Try LLM first if available (with caching)
   if (await isLLMAvailable()) {
     console.log('Attempting to generate description with LLM...');
     const llmDescription = await generateDescriptionWithLLM(
@@ -389,7 +479,8 @@ export async function generateContent(
         },
         previousContent: previousContent ? { description: previousContent.description } : undefined,
       },
-      maxDescLength
+      maxDescLength,
+      website // Pass website for caching
     );
     
     if (llmDescription) {
@@ -461,6 +552,7 @@ export async function generateContent(
     address: scrapedData.address || null,
     images: scrapedData.images,
     certifications: scrapedData.certifications,
+    iconSuggestions,
     scrapedData,
     emailDraft,
     emailDraftOrdered,
