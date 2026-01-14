@@ -16,7 +16,13 @@
 ### 🔍 Smart web-scraping
 - Scraper kundens nettside for innhold
 - Henter bilder, tjenester, kontaktinfo automatisk
-- Multi-page scraping (opptil 15 sider)
+- Multi-page scraping (opptil 20 sider)
+
+### 🤖 LLM-powered content generation (Optional)
+- **OpenAI GPT-4o-mini** for fengende annonsetekster
+- Genererer headings, subheadings og beskrivelser basert på scraped innhold
+- Forbedrer tjenestelister for bedre salgsverdi
+- Fallback til scraped content og tekstbibliotek hvis API key ikke er satt
 
 ### 📝 Tekstbibliotek
 - 60+ bransjer med spesialtilpassede headings
@@ -39,11 +45,46 @@
 # Installer avhengigheter
 npm install
 
+# (Valgfritt) Sett opp OpenAI API key for LLM-generert innhold
+# Opprett .env fil og legg til:
+# OPENAI_API_KEY=your_api_key_here
+# Hent API key fra: https://platform.openai.com/api-keys
+
 # Start utviklingsserver
 npm run dev
 
 # Åpne http://localhost:3000
 ```
+
+### 🤖 LLM Setup (Valgfritt)
+
+For å få bedre, mer fengende annonsetekster kan du aktivere LLM-generering:
+
+1. **Hent OpenAI API key:**
+   - Gå til https://platform.openai.com/api-keys
+   - Opprett en ny API key
+
+2. **Lokalt utvikling - legg til i `.env` fil:**
+   ```env
+   OPENAI_API_KEY=sk-...
+   ```
+
+3. **Vercel deployment - legg til Environment Variable:**
+   - Gå til ditt Vercel-prosjekt
+   - Klikk på **Settings** → **Environment Variables**
+   - Legg til ny variabel:
+     - **Name:** `OPENAI_API_KEY`
+     - **Value:** Din API key (starter med `sk-`)
+     - **Environment:** Velg alle (Production, Preview, Development)
+   - Klikk **Save**
+   - **Viktig:** Du må redeploye appen etter å ha lagt til variabelen
+
+4. **Appen vil automatisk:**
+   - Bruke LLM for å generere headings, subheadings og beskrivelser
+   - Forbedre tjenestelister
+   - Fallback til scraped content hvis LLM ikke er tilgjengelig
+
+**Merk:** Uten API key fungerer appen fortsatt perfekt med scraped content og tekstbiblioteket.
 
 ## 📐 Annonseformater
 
@@ -76,9 +117,9 @@ Med 5-6 upgrades per dag:
 
 - **Frontend:** Next.js 16, React, TypeScript
 - **Styling:** Tailwind CSS, shadcn/ui
-- **Database:** SQLite via Prisma
 - **Scraping:** Cheerio
 - **OCR:** Tesseract.js
+- **LLM:** OpenAI GPT-4o-mini (valgfritt)
 
 ## 📄 Lisens
 

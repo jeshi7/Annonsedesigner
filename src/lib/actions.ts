@@ -4,16 +4,18 @@ import { scrapeWebsite, ScrapedData } from './scraper';
 import {
   getUpgradeFormat,
   getSecondUpgradeFormat,
-  getRandomHeading,
-  getRandomSubheading,
-  getRandomServices,
-  getRandomPersonalComment,
   calculatePriceDifference,
   getFormatDetails,
   EMAIL_TEMPLATE,
-  IndustryKey,
   FORMAT_CONTENT_RULES,
 } from './text-library';
+import {
+  generateHeadingWithLLM,
+  generateSubheadingWithLLM,
+  generateDescriptionWithLLM,
+  generateServiceDescriptionsWithLLM,
+  isLLMAvailable,
+} from './llm-service';
 
 export interface ProjectFormData {
   projectId: string;
@@ -121,11 +123,11 @@ function generateEmailDraft(params: EmailDraftParams): string {
 
 export async function generateContent(
   website: string,
-  industry: IndustryKey | string,
   orderedFormat: string,
-  contactName?: string
+  contactName?: string,
+  previousContent?: { heading?: string; subheading?: string; description?: string }
 ): Promise<GeneratedContent> {
-  console.log('Starting content generation for:', website, industry, orderedFormat);
+  console.log('Starting content generation for:', website, orderedFormat);
   
   // Scrape website with timeout (max 30 seconds)
   let scrapedData: ScrapedData;
@@ -162,40 +164,88 @@ export async function generateContent(
   const secondUpgradeFormatKey = getSecondUpgradeFormat(orderedFormat);
   console.log('Upgrade format:', upgradeFormatKey, 'Second upgrade:', secondUpgradeFormatKey);
   
-  // Generate heading and subheading - PRIORITIZE FROM WEBSITE
+  // Generate heading and subheading - TRY LLM FIRST, then website, then library
   let heading: string;
   let subheading: string;
   
-  // Use headings from website first
-  if (scrapedData.potentialHeadings && scrapedData.potentialHeadings.length > 0) {
-    // Velg en tilfeldig heading fra nettsiden
-    heading = scrapedData.potentialHeadings[Math.floor(Math.random() * scrapedData.potentialHeadings.length)];
-    console.log('Using heading from website:', heading);
-  } else {
-    // Fallback til bibliotek
-    try {
-      heading = getRandomHeading(industry);
-    } catch (error) {
-      console.error('Error generating heading:', error);
-      heading = 'Kvalitet og fagkompetanse';
+  const companyName = scrapedData.companyName || 'Selskapet';
+  
+  // Try LLM first for heading
+  if (await isLLMAvailable()) {
+    console.log('Attempting to generate heading with LLM...');
+    const llmHeading = await generateHeadingWithLLM({
+      companyName,
+      scrapedContent: {
+        description: scrapedData.description,
+        services: scrapedData.services,
+        allPageContent: scrapedData.allPageContent,
+        potentialHeadings: scrapedData.potentialHeadings,
+        potentialSubheadings: scrapedData.potentialSubheadings,
+      },
+      previousContent: previousContent ? { heading: previousContent.heading } : undefined,
+    });
+    
+    if (llmHeading) {
+      heading = llmHeading;
+      console.log('Using LLM-generated heading:', heading);
+    } else {
+      // Fallback to website
+      if (scrapedData.potentialHeadings && scrapedData.potentialHeadings.length > 0) {
+        heading = scrapedData.potentialHeadings[Math.floor(Math.random() * scrapedData.potentialHeadings.length)];
+        console.log('LLM failed, using heading from website:', heading);
+      } else {
+        heading = `${companyName} – Din pålitelige partner`;
+        console.log('Using fallback heading');
+      }
     }
-    console.log('Using heading from library:', heading);
+  } else {
+    // No LLM available, use website first
+    if (scrapedData.potentialHeadings && scrapedData.potentialHeadings.length > 0) {
+      heading = scrapedData.potentialHeadings[Math.floor(Math.random() * scrapedData.potentialHeadings.length)];
+      console.log('Using heading from website:', heading);
+    } else {
+      heading = `${companyName} – Din pålitelige partner`;
+      console.log('Using fallback heading');
+    }
   }
   
-  // Use subheadings from website first
-  if (scrapedData.potentialSubheadings && scrapedData.potentialSubheadings.length > 0) {
-    // Velg en tilfeldig subheading fra nettsiden
-    subheading = scrapedData.potentialSubheadings[Math.floor(Math.random() * scrapedData.potentialSubheadings.length)];
-    console.log('Using subheading from website:', subheading);
-  } else {
-    // Fallback til bibliotek
-    try {
-      subheading = getRandomSubheading(industry);
-    } catch (error) {
-      console.error('Error generating subheading:', error);
-      subheading = 'Din lokale samarbeidspartner';
+  // Try LLM first for subheading
+  if (await isLLMAvailable()) {
+    console.log('Attempting to generate subheading with LLM...');
+    const llmSubheading = await generateSubheadingWithLLM({
+      companyName,
+      scrapedContent: {
+        description: scrapedData.description,
+        services: scrapedData.services,
+        allPageContent: scrapedData.allPageContent,
+        potentialHeadings: scrapedData.potentialHeadings,
+        potentialSubheadings: scrapedData.potentialSubheadings,
+      },
+      previousContent: previousContent ? { subheading: previousContent.subheading } : undefined,
+    });
+    
+    if (llmSubheading) {
+      subheading = llmSubheading;
+      console.log('Using LLM-generated subheading:', subheading);
+    } else {
+      // Fallback to website
+      if (scrapedData.potentialSubheadings && scrapedData.potentialSubheadings.length > 0) {
+        subheading = scrapedData.potentialSubheadings[Math.floor(Math.random() * scrapedData.potentialSubheadings.length)];
+        console.log('LLM failed, using subheading from website:', subheading);
+      } else {
+        subheading = 'Profesjonelle løsninger tilpasset dine behov';
+        console.log('Using fallback subheading');
+      }
     }
-    console.log('Using subheading from library:', subheading);
+  } else {
+    // No LLM available, use website first
+    if (scrapedData.potentialSubheadings && scrapedData.potentialSubheadings.length > 0) {
+      subheading = scrapedData.potentialSubheadings[Math.floor(Math.random() * scrapedData.potentialSubheadings.length)];
+      console.log('Using subheading from website:', subheading);
+    } else {
+      subheading = 'Profesjonelle løsninger tilpasset dine behov';
+      console.log('Using fallback subheading');
+    }
   }
   
   // Get content rules for each level
@@ -220,10 +270,30 @@ export async function generateContent(
       }
     }
     
-    // Kun bruk bibliotek hvis vi har INGEN services fra nettsiden
+    // Kun bruk fallback hvis vi har INGEN services fra nettsiden
     if (services.length === 0) {
-      console.log('No services from website, using library');
-      services = getRandomServices(industry, serviceCount);
+      console.log('No services from website, using fallback');
+      services = ['Rådgivning', 'Prosjektering', 'Utførelse', 'Service'].slice(0, serviceCount);
+    }
+    
+    // Enhance services with LLM if available
+    if (await isLLMAvailable() && services.length > 0) {
+      console.log('Enhancing services with LLM...');
+      const enhancedServices = await generateServiceDescriptionsWithLLM({
+        companyName,
+        scrapedContent: {
+          description: scrapedData.description,
+          services: scrapedData.services,
+          allPageContent: scrapedData.allPageContent,
+          potentialHeadings: scrapedData.potentialHeadings,
+          potentialSubheadings: scrapedData.potentialSubheadings,
+        },
+      }, services);
+      
+      if (enhancedServices.length > 0) {
+        services = enhancedServices;
+        console.log('Services enhanced with LLM');
+      }
     }
   } catch (error) {
     console.error('Error getting services:', error);
@@ -258,7 +328,7 @@ export async function generateContent(
     console.log('Generated personal comment from website findings');
   } else {
     try {
-      personalComment = getRandomPersonalComment(industry);
+      personalComment = 'Dere hadde godt materiell på nettsiden! Jeg har laget et fengende annonseforslag basert på det jeg fant.';
     } catch (error) {
       console.error('Error generating personal comment:', error);
       personalComment = 'Dere hadde godt materiell på nettsiden!';
@@ -298,29 +368,80 @@ export async function generateContent(
       })
     : '';
 
-  // Use scraped description - prioritize from website, generate from content if needed
+  // Use scraped description - TRY LLM FIRST, then prioritize from website, generate from content if needed
   let description: string;
-  if (scrapedData.description) {
-    description = scrapedData.description;
-    console.log('Using description from website');
-  } else if (scrapedData.allPageContent && scrapedData.allPageContent.length > 100) {
-    // Generer beskrivelse fra nettsidens innhold
-    const sentences = scrapedData.allPageContent
-      .split(/[.!?]/)
-      .map(s => s.trim())
-      .filter(s => s.length > 30 && s.length < 200)
-      .slice(0, 3);
+  
+  // Determine max description length based on format (upgrade2 gets more space)
+  const maxDescLength = upgrade2Rules?.description ? 300 : upgrade1Rules?.description ? 200 : 150;
+  
+  // Try LLM first if available
+  if (await isLLMAvailable()) {
+    console.log('Attempting to generate description with LLM...');
+    const llmDescription = await generateDescriptionWithLLM(
+      {
+        companyName,
+        scrapedContent: {
+          description: scrapedData.description,
+          services: scrapedData.services,
+          allPageContent: scrapedData.allPageContent,
+          potentialHeadings: scrapedData.potentialHeadings,
+          potentialSubheadings: scrapedData.potentialSubheadings,
+        },
+        previousContent: previousContent ? { description: previousContent.description } : undefined,
+      },
+      maxDescLength
+    );
     
-    if (sentences.length > 0) {
-      description = sentences.join('. ') + '.';
-      console.log('Generated description from website content');
+    if (llmDescription) {
+      description = llmDescription;
+      console.log('Using LLM-generated description');
     } else {
-      description = `${scrapedData.companyName || 'Vi'} er din lokale partner for ${industry.replace(/_/g, ' ')}. Med fokus på kvalitet og kundetilfredshet leverer vi profesjonelle tjenester tilpasset dine behov.`;
-      console.log('Using fallback description');
+      // Fallback to scraped or generated
+      if (scrapedData.description) {
+        description = scrapedData.description;
+        console.log('LLM failed, using description from website');
+      } else if (scrapedData.allPageContent && scrapedData.allPageContent.length > 100) {
+        const sentences = scrapedData.allPageContent
+          .split(/[.!?]/)
+          .map(s => s.trim())
+          .filter(s => s.length > 30 && s.length < 200)
+          .slice(0, 3);
+        
+        if (sentences.length > 0) {
+          description = sentences.join('. ') + '.';
+          console.log('LLM failed, generated description from website content');
+        } else {
+          description = `${scrapedData.companyName || 'Vi'} leverer profesjonelle løsninger med fokus på kvalitet og kundetilfredshet.`;
+          console.log('LLM failed, using fallback description');
+        }
+      } else {
+        description = `${scrapedData.companyName || 'Vi'} leverer profesjonelle løsninger med fokus på kvalitet og kundetilfredshet.`;
+        console.log('LLM failed, using fallback description');
+      }
     }
   } else {
-    description = `${scrapedData.companyName || 'Vi'} er din lokale partner for ${industry.replace(/_/g, ' ')}. Med fokus på kvalitet og kundetilfredshet leverer vi profesjonelle tjenester tilpasset dine behov.`;
-    console.log('Using fallback description');
+    // No LLM available, use scraped or generated
+    if (scrapedData.description) {
+      description = scrapedData.description;
+      console.log('Using description from website');
+    } else if (scrapedData.allPageContent && scrapedData.allPageContent.length > 100) {
+      const sentences = scrapedData.allPageContent
+        .split(/[.!?]/)
+        .map(s => s.trim())
+        .filter(s => s.length > 30 && s.length < 200)
+        .slice(0, 3);
+      
+      if (sentences.length > 0) {
+        description = sentences.join('. ') + '.';
+        console.log('Generated description from website content');
+      } else {
+        description = `${scrapedData.companyName || 'Vi'} leverer profesjonelle løsninger med fokus på kvalitet og kundetilfredshet.`;
+        console.log('Using fallback description');
+      }
+    } else {
+      description = `${scrapedData.companyName || 'Vi'} leverer profesjonelle løsninger med fokus på kvalitet og kundetilfredshet.`;
+      console.log('Using fallback description');
+    }
   }
 
   // Log scraped contact info for debugging

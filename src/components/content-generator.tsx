@@ -11,13 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { CopyButton } from '@/components/copy-button';
 import { AdLayoutPreview } from '@/components/ad-layout-preview';
 import { 
-  HEADINGS, 
-  SUBHEADINGS, 
-  SERVICE_LISTS,
-  IndustryKey,
-  getRandomHeading,
-  getRandomSubheading,
-  getRandomServices,
   FORMAT_CONTENT_RULES,
 } from '@/lib/text-library';
 import type { GeneratedContent } from '@/lib/actions';
@@ -40,14 +33,12 @@ import {
 
 interface ContentGeneratorProps {
   content: GeneratedContent;
-  industry: IndustryKey;
   companyName: string;
   onContentChange: (content: Partial<GeneratedContent>) => void;
 }
 
 export function ContentGenerator({ 
   content, 
-  industry,
   companyName,
   onContentChange 
 }: ContentGeneratorProps) {
@@ -55,19 +46,35 @@ export function ContentGenerator({
   const [selectedServices, setSelectedServices] = useState<string[]>(content.services);
 
   const regenerateHeading = () => {
-    const newHeading = getRandomHeading(industry);
-    onContentChange({ heading: newHeading });
+    // Use scraped headings if available, otherwise use a generic one
+    if (content.scrapedData?.potentialHeadings && content.scrapedData.potentialHeadings.length > 0) {
+      const newHeading = content.scrapedData.potentialHeadings[Math.floor(Math.random() * content.scrapedData.potentialHeadings.length)];
+      onContentChange({ heading: newHeading });
+    } else {
+      onContentChange({ heading: `${companyName} – Din pålitelige partner` });
+    }
   };
 
   const regenerateSubheading = () => {
-    const newSubheading = getRandomSubheading(industry);
-    onContentChange({ subheading: newSubheading });
+    // Use scraped subheadings if available, otherwise use a generic one
+    if (content.scrapedData?.potentialSubheadings && content.scrapedData.potentialSubheadings.length > 0) {
+      const newSubheading = content.scrapedData.potentialSubheadings[Math.floor(Math.random() * content.scrapedData.potentialSubheadings.length)];
+      onContentChange({ subheading: newSubheading });
+    } else {
+      onContentChange({ subheading: 'Profesjonelle løsninger tilpasset dine behov' });
+    }
   };
 
   const regenerateServices = () => {
-    const newServices = getRandomServices(industry, 8);
-    setSelectedServices(newServices);
-    onContentChange({ services: newServices });
+    // Use scraped services if available
+    if (content.scrapedData?.services && content.scrapedData.services.length > 0) {
+      const newServices = content.scrapedData.services.slice(0, 8);
+      setSelectedServices(newServices);
+      onContentChange({ services: newServices });
+    } else {
+      // Keep current services
+      onContentChange({ services: selectedServices });
+    }
   };
 
   const toggleService = (service: string) => {
@@ -174,7 +181,9 @@ export function ContentGenerator({
     return suggestedIcons.slice(0, 12); // Returner opp til 12 ikoner
   };
 
-  const allServices = SERVICE_LISTS[industry] || [
+  const allServices = content.scrapedData?.services && content.scrapedData.services.length > 0
+    ? content.scrapedData.services
+    : [
     'Rådgivning',
     'Prosjektering',
     'Utførelse',
@@ -637,7 +646,9 @@ export function ContentGenerator({
                 className="text-lg font-semibold bg-background/50"
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                {(HEADINGS[industry] || [
+                {(content.scrapedData?.potentialHeadings && content.scrapedData.potentialHeadings.length > 0
+                  ? content.scrapedData.potentialHeadings
+                  : [
                   'Kvalitet og erfaring du kan stole på',
                   'Din lokale samarbeidspartner',
                   'Fagfolk med lang erfaring',
@@ -679,7 +690,9 @@ export function ContentGenerator({
                 className="bg-background/50 resize-none"
               />
               <div className="mt-3 space-y-2">
-                {(SUBHEADINGS[industry] || [
+                {(content.scrapedData?.potentialSubheadings && content.scrapedData.potentialSubheadings.length > 0
+                  ? content.scrapedData.potentialSubheadings
+                  : [
                   'Med fokus på kvalitet og kundetilfredshet leverer vi tjenester tilpasset dine behov.',
                   'Erfarne fagfolk som setter kunden først.',
                   'Vi tar oppdraget ditt på alvor – hver gang.',

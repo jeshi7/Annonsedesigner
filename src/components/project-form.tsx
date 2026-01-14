@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { INDUSTRIES, AD_FORMATS, getUpgradeFormat, getFormatDetails } from '@/lib/text-library';
+import { AD_FORMATS, getUpgradeFormat, getFormatDetails } from '@/lib/text-library';
 import { Loader2, Sparkles, Globe, Building2, FileText } from 'lucide-react';
 
 interface ProjectFormProps {
@@ -27,7 +27,6 @@ export interface ProjectFormData {
   companyName: string;
   website: string;
   orderedFormat: string;
-  industry: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -40,7 +39,6 @@ export function ProjectForm({ onSubmit, isLoading = false, prefillData }: Projec
     companyName: '',
     website: '',
     orderedFormat: '',
-    industry: '',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
@@ -127,53 +125,31 @@ export function ProjectForm({ onSubmit, isLoading = false, prefillData }: Projec
             />
           </div>
 
-          {/* Row 3: Format and Industry */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="orderedFormat" className="text-sm font-medium">
-                Bestilt format
-              </Label>
-              <Select
-                value={formData.orderedFormat}
-                onValueChange={(value) => handleChange('orderedFormat', value)}
-              >
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Velg format" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AD_FORMATS.map((format) => (
-                    <SelectItem key={format.value} value={format.value}>
-                      {format.label} ({format.dimensions}) – kr {format.price.toLocaleString('nb-NO')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedFormat && upgradeFormat && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  → Upgrade: <span className="text-primary font-medium">{upgradeFormat.label}</span> ({upgradeFormat.dimensions}) – +kr {(upgradeFormat.price - selectedFormat.price).toLocaleString('nb-NO')}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="industry" className="text-sm font-medium">
-                Bransje
-              </Label>
-              <Select
-                value={formData.industry}
-                onValueChange={(value) => handleChange('industry', value)}
-              >
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Velg bransje" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INDUSTRIES.map((industry) => (
-                    <SelectItem key={industry.value} value={industry.value}>
-                      {industry.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Row 3: Format */}
+          <div className="space-y-2">
+            <Label htmlFor="orderedFormat" className="text-sm font-medium">
+              Bestilt format
+            </Label>
+            <Select
+              value={formData.orderedFormat}
+              onValueChange={(value) => handleChange('orderedFormat', value)}
+            >
+              <SelectTrigger className="bg-background/50">
+                <SelectValue placeholder="Velg format" />
+              </SelectTrigger>
+              <SelectContent>
+                {AD_FORMATS.map((format) => (
+                  <SelectItem key={format.value} value={format.value}>
+                    {format.label} ({format.dimensions}) – kr {format.price.toLocaleString('nb-NO')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedFormat && upgradeFormat && (
+              <p className="text-xs text-muted-foreground mt-1">
+                → Upgrade: <span className="text-primary font-medium">{upgradeFormat.label}</span> ({upgradeFormat.dimensions}) – +kr {(upgradeFormat.price - selectedFormat.price).toLocaleString('nb-NO')}
+              </p>
+            )}
           </div>
 
           {/* Row 4: Contact Info */}
@@ -235,7 +211,7 @@ export function ProjectForm({ onSubmit, isLoading = false, prefillData }: Projec
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={isLoading || !formData.companyName || !formData.website || !formData.orderedFormat || !formData.industry}
+            disabled={isLoading || !formData.companyName || !formData.website || !formData.orderedFormat}
             className="w-full h-12 text-base font-semibold"
             size="lg"
           >

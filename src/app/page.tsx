@@ -5,7 +5,6 @@ import { ProjectForm, type ProjectFormData } from '@/components/project-form';
 import { ContentGenerator } from '@/components/content-generator';
 import { FileUpload, type ExtractedProjectData } from '@/components/file-upload';
 import { generateContent, type GeneratedContent } from '@/lib/actions';
-import type { IndustryKey } from '@/lib/text-library';
 import { toast } from 'sonner';
 import { 
   Sparkles, 
@@ -66,7 +65,6 @@ export default function Home() {
     try {
       const content = await generateContent(
         data.website,
-        data.industry as IndustryKey,
         data.orderedFormat,
         data.contactName
       );
@@ -96,16 +94,21 @@ export default function Home() {
     
     setIsLoading(true);
     try {
+      // Send previous content so LLM can generate NEW variants
       const content = await generateContent(
         currentProject.website,
-        currentProject.industry as IndustryKey,
         currentProject.orderedFormat,
-        currentProject.contactName
+        currentProject.contactName,
+        {
+          heading: generatedContent.heading,
+          subheading: generatedContent.subheading,
+          description: generatedContent.description,
+        }
       );
       
       setGeneratedContent(content);
-      toast.success('Nytt innhold generert!', {
-        description: 'Nye headings, subheadings og services',
+      toast.success('Nytt fengende innhold generert!', {
+        description: 'Nye catchy headings, subheadings og services',
       });
     } catch (error) {
       console.error('Error regenerating content:', error);
@@ -255,7 +258,6 @@ export default function Home() {
 
             <ContentGenerator
               content={generatedContent}
-              industry={currentProject?.industry as IndustryKey}
               companyName={currentProject?.companyName || ''}
               onContentChange={handleContentChange}
             />
